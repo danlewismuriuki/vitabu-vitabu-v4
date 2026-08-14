@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vitabu-postgres
+    environment:
+      POSTGRES_USER: vitabu
+      POSTGRES_PASSWORD: vitabu
+      POSTGRES_DB: vitabu
+    ports:
+      - "5433:5432"
+    volumes:
+      - vitabu_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vitabu -d vitabu"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: vitabu-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: vitabu
+      MINIO_ROOT_PASSWORD: vitabuminio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - vitabu_minio_data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: vitabu-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      mc alias set local http://minio:9000 vitabu vitabuminio;
+      mc mb -p local/vitabu-listings || true;
+      mc anonymous set download local/vitabu-listings || true;
+      exit 0;
+      "
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: vitabu-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  vitabu_pg_data:
+  vitabu_minio_data:

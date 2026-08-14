@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Vitabu.Api/Vitabu.Api.csproj" />
+    <Project Path="src/Vitabu.Core/Vitabu.Core.csproj" />
+    <Project Path="src/Vitabu.Infrastructure/Vitabu.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/Vitabu.Modules.Identity/Vitabu.Modules.Identity.csproj" />
+    <Project Path="src/Modules/Vitabu.Modules.Catalog/Vitabu.Modules.Catalog.csproj" />
+    <Project Path="src/Modules/Vitabu.Modules.Listings/Vitabu.Modules.Listings.csproj" />
+    <Project Path="src/Modules/Vitabu.Modules.Deals/Vitabu.Modules.Deals.csproj" />
+    <Project Path="src/Modules/Vitabu.Modules.Messaging/Vitabu.Modules.Messaging.csproj" />
+    <Project Path="src/Modules/Vitabu.Modules.Notifications/Vitabu.Modules.Notifications.csproj" />
+    <Project Path="src/Modules/Vitabu.Modules.Admin/Vitabu.Modules.Admin.csproj" />
+  </Folder>
+</Solution>

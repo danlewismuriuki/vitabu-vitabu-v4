@@ -1,0 +1,89 @@
+/**
+ * Vitabu Vitabu design tokens — source of truth for color & type.
+ * Keep in sync with docs/design-system.md
+ * Port to vitabu-vitabu-v4/design/tokens.css on S0.
+ */
+
+:root {
+  /* Primary (brown) */
+  --color-primary-50: #f5f3f0;
+  --color-primary-100: #e8e3dc;
+  --color-primary-500: #6d4c41;
+  --color-primary-600: #5c3e35;
+  --color-primary-700: #4b3229;
+  --color-primary-800: #3a261d;
+  --color-primary-900: #2a1b11;
+
+  /* Secondary (green) */
+  --color-secondary-50: #e8f5e8;
+  --color-secondary-100: #c8e6c9;
+  --color-secondary-500: #2c5f2d;
+  --color-secondary-600: #1b4332;
+  --color-secondary-700: #081c15;
+  --color-secondary-800: #052e16;
+  --color-secondary-900: #031a0b;
+
+  /* Accent (orange) — CTAs */
+  --color-accent-50: #fff3e0;
+  --color-accent-100: #ffe0b2;
+  --color-accent-500: #e57c23;
+  --color-accent-600: #cc6900;
+  --color-accent-700: #b25600;
+  --color-accent-800: #994400;
+  --color-accent-900: #7f3300;
+
+  /* Gold */
+  --color-gold-50: #fef7e0;
+  --color-gold-100: #faecc1;
+  --color-gold-500: #c88d36;
+  --color-gold-600: #b8802a;
+  --color-gold-700: #a8731e;
+  --color-gold-800: #986612;
+  --color-gold-900: #885906;
+
+  /* Neutral (warm) */
+  --color-neutral-50: #f9f5f2;
+  --color-neutral-100: #f5e1da;
+  --color-neutral-200: #e8ddd6;
+  --color-neutral-300: #d4c4b8;
+  --color-neutral-400: #c0ab9a;
+  --color-neutral-500: #a0877a;
+  --color-neutral-600: #806d60;
+  --color-neutral-700: #605346;
+  --color-neutral-800: #40392c;
+  --color-neutral-900: #201f12;
+
+  /* Semantic aliases */
+  --color-page-bg: var(--color-neutral-50);
+  --color-cta: var(--color-accent-500);
+  --color-cta-hover: var(--color-accent-600);
+  --color-brand-text: var(--color-primary-700);
+  --color-body-text: var(--color-neutral-800);
+  --color-muted-text: var(--color-neutral-500);
+  --color-success: var(--color-secondary-500);
+  --color-border: var(--color-neutral-300);
+
+  /* Typography */
+  --font-heading: "Poppins", sans-serif;
+  --font-body: "Lato", sans-serif;
+
+  /* Radius */
+  --radius-button: 0.5rem; /* rounded-lg */
+  --radius-card: 0.75rem; /* rounded-xl */
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-page-bg);
+  color: var(--color-body-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--color-brand-text);
+}

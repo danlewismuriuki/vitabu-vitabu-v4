@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: Vitabu Vitabu API
+  version: 0.1.0
+  description: |
+    Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
+    Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
+    Error envelope: Problem. S0 ships health only; feature ops land in later slices.
+servers:
+  - url: http://localhost:5080
+    description: Local API
+tags:
+  - name: System
+    description: Health and meta
+paths:
+  /health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Liveness check
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT from Identity login (S1+). Not required for /health.
+  schemas:
+    Problem:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code (snake_case)
+          example: listing_not_active
+        message:
+          type: string
+          description: Human-readable explanation
+          example: This listing is not available for new deals.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          nullable: true
+          description: Field-level validation errors when present
+          example:
+            email: ["Email is required."]
+            password: ["Password must be at least 8 characters."]
+    Page:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Page of results (typed per endpoint)
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        page_size:
+          type: integer
+          minimum: 1
+          example: 20
+        total_items:
+          type: integer
+          minimum: 0
+          example: 42
+        total_pages:
+          type: integer
+          minimum: 0
+          example: 3
+    HealthStatus:
+      type: object
+      required: [status, service, utc]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          example: ok
+        service:
+          type: string
+          example: vitabu-api
+        utc:
+          type: string
+          format: date-time
+          description: Server time in UTC
+          example: "2026-08-14T06:00:00Z"
