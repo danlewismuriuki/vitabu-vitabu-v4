@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Vitabu.Infrastructure.Persistence;
+using Vitabu.Modules.Catalog.Persistence;
 using Vitabu.Modules.Identity.Persistence;
+using Vitabu.Modules.Listings.Persistence;
 
 namespace Vitabu.Infrastructure;
 
@@ -19,6 +21,8 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
+        services.AddScoped<ICatalogDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
+        services.AddScoped<IListingsDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
 
         return services;
     }

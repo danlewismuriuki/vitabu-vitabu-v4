@@ -82,11 +82,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check OpenAPI Identity ops
+      - name: Check OpenAPI Identity + Listings ops
         run: |
           test -f contract/openapi.yaml
           grep -q "operationId: getHealth" contract/openapi.yaml
           grep -q "operationId: register" contract/openapi.yaml
           grep -q "operationId: requestPhoneOtp" contract/openapi.yaml
+          grep -q "operationId: listListings" contract/openapi.yaml
+          grep -q "operationId: getListing" contract/openapi.yaml
           grep -q "Problem:" contract/openapi.yaml
           grep -q "bearerAuth:" contract/openapi.yaml

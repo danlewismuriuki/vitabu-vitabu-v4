@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "currency": "KES",
+  "timezone": "Africa/Nairobi",
+  "grades": [
+    "PP1",
+    "PP2",
+    "Grade 1",
+    "Grade 2",
+    "Grade 3",
+    "Grade 4",
+    "Grade 5",
+    "Grade 6",
+    "Grade 7",
+    "Grade 8",
+    "Grade 9"
+  ],
+  "subjects": [
+    "Mathematics",
+    "English",
+    "Kiswahili",
+    "Science & Technology",
+    "Social Studies",
+    "Religious Education",
+    "Creative Arts",
+    "Environmental Activities",
+    "Agriculture",
+    "Home Science",
+    "Pre-Technical",
+    "Computer Science"
+  ],
+  "terms": ["Term 1", "Term 2", "Term 3", "Combined"],
+  "material_types": [
+    "coursebook",
+    "workbook",
+    "teachers_guide",
+    "revision_guide",
+    "set_book",
+    "other"
+  ],
+  "titles": [
+    {
+      "code": "G5-MATH-T1",
+      "title": "Mathematics Grade 5 Term 1",
+      "grade": "Grade 5",
+      "subject": "Mathematics",
+      "term": "Term 1",
+      "material_type": "coursebook",
+      "language": "English"
+    },
+    {
+      "code": "G5-MATH-T2",
+      "title": "Mathematics Grade 5 Term 2",
+      "grade": "Grade 5",
+      "subject": "Mathematics",
+      "term": "Term 2",
+      "material_type": "coursebook",
+      "language": "English"
+    },
+    {
+      "code": "G4-ENG-T1",
+      "title": "English Grade 4 Term 1",
+      "grade": "Grade 4",
+      "subject": "English",
+      "term": "Term 1",
+      "material_type": "coursebook",
+      "language": "English"
+    },
+    {
+      "code": "G6-KIS-T1",
+      "title": "Kiswahili Grade 6 Term 1",
+      "grade": "Grade 6",
+      "subject": "Kiswahili",
+      "term": "Term 1",
+      "material_type": "coursebook",
+      "language": "Kiswahili"
+    },
+    {
+      "code": "G3-SCI-T1",
+      "title": "Science & Technology Grade 3 Term 1",
+      "grade": "Grade 3",
+      "subject": "Science & Technology",
+      "term": "Term 1",
+      "material_type": "coursebook",
+      "language": "English"
+    },
+    {
+      "code": "PP1-ENV",
+      "title": "Environmental Activities PP1",
+      "grade": "PP1",
+      "subject": "Environmental Activities",
+      "term": "Combined",
+      "material_type": "coursebook",
+      "language": "English"
+    },
+    {
+      "code": "G7-SST-T1",
+      "title": "Social Studies Grade 7 Term 1",
+      "grade": "Grade 7",
+      "subject": "Social Studies",
+      "term": "Term 1",
+      "material_type": "coursebook",
+      "language": "English"
+    },
+    {
+      "code": "G8-MATH-REV",
+      "title": "Mathematics Grade 8 Revision Guide",
+      "grade": "Grade 8",
+      "subject": "Mathematics",
+      "term": "Combined",
+      "material_type": "revision_guide",
+      "language": "English"
+    }
+  ],
+  "cities": [
+    "Nairobi",
+    "Mombasa",
+    "Kisumu",
+    "Nakuru",
+    "Eldoret",
+    "Thika",
+    "Nyeri",
+    "Meru",
+    "Kakamega",
+    "Kisii"
+  ],
+  "_note": "Seed stub for S0. Expand from v3 cbcBookCatalog / admin CRUD in S2+."
+}

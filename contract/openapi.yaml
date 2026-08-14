@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
@@ -14,6 +14,10 @@ tags:
     description: Health and meta
   - name: Auth
     description: Register, login, session, password reset, phone OTP
+  - name: Catalog
+    description: CBC taxonomy facets and titles
+  - name: Listings
+    description: Public marketplace listings (read in S2)
 paths:
   /health:
     get:
@@ -183,6 +187,93 @@ paths:
         "400":
           $ref: "#/components/responses/Problem"
         "401":
+          $ref: "#/components/responses/Problem"
+
+  /catalog/facets:
+    get:
+      tags: [Catalog]
+      operationId: getCatalogFacets
+      summary: Filter facets for browse UI
+      responses:
+        "200":
+          description: Facets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogFacets"
+
+  /listings:
+    get:
+      tags: [Listings]
+      operationId: listListings
+      summary: Browse Active listings (mixture of intents)
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: grade
+          in: query
+          schema:
+            type: string
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+          description: Soft geo filter; omit for all Kenya
+        - name: intent
+          in: query
+          schema:
+            $ref: "#/components/schemas/ListingIntent"
+        - name: condition
+          in: query
+          schema:
+            $ref: "#/components/schemas/BookCondition"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Page of listings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingPage"
+
+  /listings/{id}:
+    get:
+      tags: [Listings]
+      operationId: getListing
+      summary: Listing detail for SEO and arrange CTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Listing detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingDetail"
+        "404":
           $ref: "#/components/responses/Problem"
 
 components:
@@ -384,3 +475,110 @@ components:
           type: string
           nullable: true
           description: Present only in Development for mock SMS
+    ListingIntent:
+      type: string
+      enum: [sale, free, exchange]
+    BookCondition:
+      type: string
+      enum: [like_new, good, fair, writing_inside]
+    ListingStatus:
+      type: string
+      enum: [draft, active, reserved, sold, given, exchanged, paused, hidden]
+    CatalogFacets:
+      type: object
+      required: [grades, subjects, cities, intents, conditions]
+      properties:
+        grades:
+          type: array
+          items:
+            type: string
+        subjects:
+          type: array
+          items:
+            type: string
+        cities:
+          type: array
+          items:
+            type: string
+        intents:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListingIntent"
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookCondition"
+    SellerSnippet:
+      type: object
+      required: [display_name, city]
+      properties:
+        display_name:
+          type: string
+        city:
+          type: string
+    ListingCard:
+      type: object
+      required:
+        [id, title, grade, subject, city, intent, condition, status, created_at_utc]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        grade:
+          type: string
+        subject:
+          type: string
+        term:
+          type: string
+          nullable: true
+        city:
+          type: string
+        intent:
+          $ref: "#/components/schemas/ListingIntent"
+        condition:
+          $ref: "#/components/schemas/BookCondition"
+        status:
+          $ref: "#/components/schemas/ListingStatus"
+        price_kes:
+          type: number
+          format: double
+          nullable: true
+        cover_image_url:
+          type: string
+          nullable: true
+        interest_count:
+          type: integer
+          minimum: 0
+        created_at_utc:
+          type: string
+          format: date-time
+    ListingDetail:
+      allOf:
+        - $ref: "#/components/schemas/ListingCard"
+        - type: object
+          required: [description, seller, slug]
+          properties:
+            description:
+              type: string
+            slug:
+              type: string
+            seller:
+              $ref: "#/components/schemas/SellerSnippet"
+    ListingPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListingCard"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
