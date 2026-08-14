@@ -38,11 +38,14 @@ export default function HomePage() {
             <Link href="/sell" className="btn-secondary">
               List a book
             </Link>
+            <Link href="/signup" className="btn-secondary">
+              Sign up
+            </Link>
           </div>
         </div>
 
         <p className="animate-slide-up text-sm text-neutral-500">
-          S0 shell — catalog and auth land in S1–S2.
+          S1 — auth pages live at /signup, /login, /verify-phone.
         </p>
       </section>
     </main>

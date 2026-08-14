@@ -1,7 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using Vitabu.Api.Middleware;
 using Vitabu.Infrastructure;
+using Vitabu.Infrastructure.Persistence;
+using Vitabu.Modules.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -26,8 +30,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<VitabuDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new
 {
@@ -36,6 +48,8 @@ app.MapGet("/health", () => Results.Ok(new
     utc = DateTime.UtcNow
 }))
 .WithName("getHealth");
+
+app.MapIdentityEndpoints();
 
 app.Run();
 

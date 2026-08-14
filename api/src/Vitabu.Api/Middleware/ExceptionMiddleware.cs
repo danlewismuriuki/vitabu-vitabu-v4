@@ -33,6 +33,11 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
                 "validation_failed",
                 vex.Message,
                 vex.Errors),
+            UnauthorizedDomainException ux => (
+                (int)HttpStatusCode.Unauthorized,
+                ux.ErrorCode,
+                ux.Message,
+                (IDictionary<string, string[]>?)null),
             NotFoundException nf => (
                 (int)HttpStatusCode.NotFound,
                 nf.ErrorCode,

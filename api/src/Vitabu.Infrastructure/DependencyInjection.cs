@@ -1,19 +1,25 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Vitabu.Infrastructure.Persistence;
+using Vitabu.Modules.Identity.Persistence;
 
 namespace Vitabu.Infrastructure;
 
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Registers persistence and external adapters. S0 is a no-op placeholder;
-    /// S1+ adds EF Core DbContext, MinIO, SMS/email.
-    /// </summary>
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        _ = configuration;
+        var connectionString = configuration.GetConnectionString("Postgres")
+            ?? throw new InvalidOperationException("ConnectionStrings:Postgres is required.");
+
+        services.AddDbContext<VitabuDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
+        services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
+
         return services;
     }
 }

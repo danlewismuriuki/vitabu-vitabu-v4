@@ -12,11 +12,27 @@ concurrency:
 
 jobs:
   api:
-    name: API build
+    name: API build & test
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: api
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vitabu
+          POSTGRES_PASSWORD: vitabu
+          POSTGRES_DB: vitabu
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vitabu -d vitabu"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      VITABU_TEST_POSTGRES: Host=localhost;Port=5432;Database=vitabu;Username=vitabu;Password=vitabu
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -26,6 +42,8 @@ jobs:
         run: dotnet restore Vitabu.slnx
       - name: Build
         run: dotnet build Vitabu.slnx -c Release --no-restore
+      - name: Test
+        run: dotnet test Vitabu.slnx -c Release --no-build --verbosity normal
 
   web:
     name: Web build
@@ -64,9 +82,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check OpenAPI shell
+      - name: Check OpenAPI Identity ops
         run: |
           test -f contract/openapi.yaml
           grep -q "operationId: getHealth" contract/openapi.yaml
+          grep -q "operationId: register" contract/openapi.yaml
+          grep -q "operationId: requestPhoneOtp" contract/openapi.yaml
           grep -q "Problem:" contract/openapi.yaml
           grep -q "bearerAuth:" contract/openapi.yaml
