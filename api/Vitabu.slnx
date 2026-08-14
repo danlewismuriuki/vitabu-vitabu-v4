@@ -13,4 +13,7 @@
     <Project Path="src/Modules/Vitabu.Modules.Notifications/Vitabu.Modules.Notifications.csproj" />
     <Project Path="src/Modules/Vitabu.Modules.Admin/Vitabu.Modules.Admin.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vitabu.Api.Tests/Vitabu.Api.Tests.csproj" />
+  </Folder>
 </Solution>

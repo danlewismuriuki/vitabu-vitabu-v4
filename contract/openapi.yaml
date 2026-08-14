@@ -1,17 +1,19 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.1.0
+  version: 0.2.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
-    Error envelope: Problem. S0 ships health only; feature ops land in later slices.
+    Error envelope: Problem.
 servers:
   - url: http://localhost:5080
     description: Local API
 tags:
   - name: System
     description: Health and meta
+  - name: Auth
+    description: Register, login, session, password reset, phone OTP
 paths:
   /health:
     get:
@@ -25,13 +27,178 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Create parent account and return JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Email + password login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      operationId: getMe
+      summary: Current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      operationId: forgotPassword
+      summary: Request password reset email (always 202 to avoid email enumeration)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/Problem"
+
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      operationId: resetPassword
+      summary: Set a new password with reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/Problem"
+
+  /auth/phone/request-otp:
+    post:
+      tags: [Auth]
+      operationId: requestPhoneOtp
+      summary: Send SMS OTP to verify phone (dev may return dev_code)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestPhoneOtpRequest"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestPhoneOtpResponse"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+
+  /auth/phone/verify-otp:
+    post:
+      tags: [Auth]
+      operationId: verifyPhoneOtp
+      summary: Verify SMS OTP and mark phone verified
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPhoneOtpRequest"
+      responses:
+        "200":
+          description: Phone verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT from Identity login (S1+). Not required for /health.
+      description: JWT from register/login. Not required for /health.
+  responses:
+    Problem:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
   schemas:
     Problem:
       type: object
@@ -39,12 +206,9 @@ components:
       properties:
         error:
           type: string
-          description: Machine-readable error code (snake_case)
-          example: listing_not_active
+          example: validation_failed
         message:
           type: string
-          description: Human-readable explanation
-          example: This listing is not available for new deals.
         errors:
           type: object
           additionalProperties:
@@ -52,10 +216,6 @@ components:
             items:
               type: string
           nullable: true
-          description: Field-level validation errors when present
-          example:
-            email: ["Email is required."]
-            password: ["Password must be at least 8 characters."]
     Page:
       type: object
       required: [items, page, page_size, total_items, total_pages]
@@ -63,23 +223,18 @@ components:
         items:
           type: array
           items: {}
-          description: Page of results (typed per endpoint)
         page:
           type: integer
           minimum: 1
-          example: 1
         page_size:
           type: integer
           minimum: 1
-          example: 20
         total_items:
           type: integer
           minimum: 0
-          example: 42
         total_pages:
           type: integer
           minimum: 0
-          example: 3
     HealthStatus:
       type: object
       required: [status, service, utc]
@@ -87,12 +242,145 @@ components:
         status:
           type: string
           enum: [ok]
-          example: ok
         service:
           type: string
-          example: vitabu-api
         utc:
           type: string
           format: date-time
-          description: Server time in UTC
-          example: "2026-08-14T06:00:00Z"
+    RegisterRequest:
+      type: object
+      required:
+        [display_name, email, password, city, accept_terms, confirm_parent_guardian]
+      properties:
+        display_name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        city:
+          type: string
+          minLength: 2
+          maxLength: 80
+        accept_terms:
+          type: boolean
+          description: Must be true
+        confirm_parent_guardian:
+          type: boolean
+          description: Must be true — 18+ / parent-guardian
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    RequestPhoneOtpRequest:
+      type: object
+      required: [phone_e164]
+      properties:
+        phone_e164:
+          type: string
+          description: Kenya mobile in E.164, e.g. +254712345678
+          pattern: "^\\+2547\\d{8}$"
+    VerifyPhoneOtpRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: "^\\d{6}$"
+    UserProfile:
+      type: object
+      required:
+        [
+          id,
+          display_name,
+          email,
+          city,
+          phone_verified,
+          created_at_utc,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        email:
+          type: string
+          format: email
+        city:
+          type: string
+        phone_e164:
+          type: string
+          nullable: true
+        phone_verified:
+          type: boolean
+        phone_verified_at_utc:
+          type: string
+          format: date-time
+          nullable: true
+        email_verified:
+          type: boolean
+        created_at_utc:
+          type: string
+          format: date-time
+    AuthResponse:
+      type: object
+      required: [access_token, token_type, expires_in, user]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Seconds until expiry
+        user:
+          $ref: "#/components/schemas/UserProfile"
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    RequestPhoneOtpResponse:
+      type: object
+      required: [message, expires_in_seconds]
+      properties:
+        message:
+          type: string
+        expires_in_seconds:
+          type: integer
+        dev_code:
+          type: string
+          nullable: true
+          description: Present only in Development for mock SMS
