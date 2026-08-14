@@ -9,6 +9,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Vitabu.Core\Vitabu.Core.csproj" />
     <ProjectReference Include="..\Modules\Vitabu.Modules.Identity\Vitabu.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Vitabu.Modules.Catalog\Vitabu.Modules.Catalog.csproj" />
+    <ProjectReference Include="..\Modules\Vitabu.Modules.Listings\Vitabu.Modules.Listings.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +20,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
   </ItemGroup>
 

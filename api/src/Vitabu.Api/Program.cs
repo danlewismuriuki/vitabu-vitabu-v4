@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Vitabu.Api.Middleware;
 using Vitabu.Infrastructure;
 using Vitabu.Infrastructure.Persistence;
+using Vitabu.Infrastructure.Seed;
 using Vitabu.Modules.Identity;
+using Vitabu.Modules.Listings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,11 +20,13 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddListingsModule();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
         policy.WithOrigins(
                 "http://localhost:3000",
+                "http://localhost:3002",
                 "http://localhost:5174")
             .AllowAnyHeader()
             .AllowAnyMethod());
@@ -35,6 +39,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<VitabuDbContext>();
     await db.Database.MigrateAsync();
 }
+
+await CatalogSeed.SeedAsync(app.Services);
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors();
@@ -50,6 +56,7 @@ app.MapGet("/health", () => Results.Ok(new
 .WithName("getHealth");
 
 app.MapIdentityEndpoints();
+app.MapListingsEndpoints();
 
 app.Run();
 

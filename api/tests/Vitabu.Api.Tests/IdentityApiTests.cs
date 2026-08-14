@@ -6,7 +6,8 @@ using FluentAssertions;
 
 namespace Vitabu.Api.Tests;
 
-public class IdentityApiTests : IClassFixture<VitabuWebApplicationFactory>
+[Collection("Api")]
+public class IdentityApiTests
 {
     private readonly HttpClient _client;
     private static readonly JsonSerializerOptions JsonOptions = new()

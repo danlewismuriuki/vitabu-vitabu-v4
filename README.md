@@ -93,7 +93,8 @@ Ship **OpenAPI → API module → web/admin → tests**. See [docs/slice-playboo
 | Slice | Status |
 |-------|--------|
 | **S0** Scaffold + health | Done |
-| **S1** Identity + phone OTP | On `feat/vitabu-s1-identity` |
+| **S1** Identity + phone OTP | Merged |
+| **S2** Catalog + public listings | On `feat/vitabu-s2-catalog` |
 | S2 Catalog + public listings | |
 | S3 Sell + photos | |
 | S4 Deals + notifications | |
