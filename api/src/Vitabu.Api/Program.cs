@@ -5,6 +5,7 @@ using Vitabu.Api.Middleware;
 using Vitabu.Infrastructure;
 using Vitabu.Infrastructure.Persistence;
 using Vitabu.Infrastructure.Seed;
+using Vitabu.Modules.Catalog;
 using Vitabu.Modules.Identity;
 using Vitabu.Modules.Listings;
 
@@ -20,6 +21,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCatalogModule();
 builder.Services.AddListingsModule();
 builder.Services.AddCors(options =>
 {
@@ -56,6 +58,7 @@ app.MapGet("/health", () => Results.Ok(new
 .WithName("getHealth");
 
 app.MapIdentityEndpoints();
+app.MapCatalogEndpoints();
 app.MapListingsEndpoints();
 
 app.Run();

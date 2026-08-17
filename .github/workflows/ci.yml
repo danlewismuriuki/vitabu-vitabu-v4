@@ -90,5 +90,8 @@ jobs:
           grep -q "operationId: requestPhoneOtp" contract/openapi.yaml
           grep -q "operationId: listListings" contract/openapi.yaml
           grep -q "operationId: getListing" contract/openapi.yaml
+          grep -q "operationId: createListing" contract/openapi.yaml
+          grep -q "operationId: listMyListings" contract/openapi.yaml
+          grep -q "operationId: searchCatalogTitles" contract/openapi.yaml
           grep -q "Problem:" contract/openapi.yaml
           grep -q "bearerAuth:" contract/openapi.yaml

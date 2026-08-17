@@ -38,7 +38,7 @@ function LoginForm() {
       router.push(returnUrl);
     } catch (err) {
       if (err instanceof ApiError) setErrors(fieldErrors(err.problem));
-      else setErrors(["Something went wrong. Try again."]);
+      else setErrors(["Cannot reach the API. Is it running on :5080?"]);
     } finally {
       setLoading(false);
     }

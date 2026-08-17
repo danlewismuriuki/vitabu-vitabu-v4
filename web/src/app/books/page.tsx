@@ -80,6 +80,9 @@ export default async function BooksPage({
             Vitabu Vitabu
           </Link>
           <nav className="flex gap-3 text-sm">
+            <Link href="/sell" className="text-primary-700 hover:text-accent-600">
+              Sell
+            </Link>
             <Link href="/signup" className="text-accent-600 hover:text-accent-700">
               Sign up
             </Link>

@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell, FormError, fieldClass, labelClass } from "@/components/AuthShell";
 import { ApiError, apiFetch, fieldErrors, UserProfile } from "@/lib/api";
 import { getToken, getStoredUser, saveSession } from "@/lib/auth-storage";
 
-export default function VerifyPhonePage() {
+function VerifyPhoneForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") || "/";
   const [errors, setErrors] = useState<string[]>([]);
   const [info, setInfo] = useState<string | null>(null);
   const [devCode, setDevCode] = useState<string | null>(null);
@@ -16,8 +18,12 @@ export default function VerifyPhonePage() {
   const [step, setStep] = useState<"phone" | "code">("phone");
 
   useEffect(() => {
-    if (!getToken()) router.replace("/login?returnUrl=/verify-phone");
-  }, [router]);
+    if (!getToken()) {
+      router.replace(
+        `/login?returnUrl=${encodeURIComponent(`/verify-phone?returnUrl=${returnUrl}`)}`
+      );
+    }
+  }, [router, returnUrl]);
 
   async function requestOtp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,7 +73,7 @@ export default function VerifyPhonePage() {
           phone_e164: user.phone_e164,
         });
       }
-      router.push("/");
+      router.push(returnUrl.startsWith("/") ? returnUrl : "/");
     } catch (err) {
       if (err instanceof ApiError) setErrors(fieldErrors(err.problem));
       else setErrors(["Could not verify code."]);
@@ -143,5 +149,13 @@ export default function VerifyPhonePage() {
         </Link>
       </p>
     </AuthShell>
+  );
+}
+
+export default function VerifyPhonePage() {
+  return (
+    <Suspense fallback={<AuthShell title="Verify your phone">Loading…</AuthShell>}>
+      <VerifyPhoneForm />
+    </Suspense>
   );
 }

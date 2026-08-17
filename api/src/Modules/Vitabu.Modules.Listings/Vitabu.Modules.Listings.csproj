@@ -13,9 +13,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Vitabu.Core\Vitabu.Core.csproj" />
     <ProjectReference Include="..\Vitabu.Modules.Identity\Vitabu.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Vitabu.Modules.Catalog\Vitabu.Modules.Catalog.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
   </ItemGroup>
