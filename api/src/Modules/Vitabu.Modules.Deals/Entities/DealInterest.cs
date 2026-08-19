@@ -20,4 +20,9 @@ public sealed class DealInterest
     public DateTime? SellerCompletedAtUtc { get; set; }
     public string? DisputeReason { get; set; }
     public DateTime? DisputedAtUtc { get; set; }
+    public int? MtaaniAgentId { get; set; }
+    public string? MtaaniAgentName { get; set; }
+    public int? MtaaniLocationId { get; set; }
+    public string? MtaaniLocationName { get; set; }
+    public int? MtaaniEstimatedFeeKes { get; set; }
 }

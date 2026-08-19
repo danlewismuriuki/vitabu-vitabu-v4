@@ -23,7 +23,8 @@ How we ship features. Backend detail: [backend-cemes-practices.md](backend-cemes
 | S7 | donate_school intent + donated complete |
 | S8 | Messaging (1:1 threads per listing) |
 | S9 | School profiles (directory + donate `school_id`) |
-| S10+ | M-Pesa, SMS/WhatsApp, Mtaani, wishlist alerts, growth, … |
+| S10 | Pickup Mtaani facade (dev stub → live ApiKey) |
+| S11+ | Wishlist alerts, SMS/WhatsApp, M-Pesa, Mtaani packages, growth, … |
 
 ## Per-slice steps
 1. Update OpenAPI (+ optional `docs/slices/sN-*-contract.md`)  

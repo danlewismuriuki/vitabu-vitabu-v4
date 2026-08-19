@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Vitabu.Core.Exceptions;
 using Vitabu.Modules.Deals.Contracts;
+using Vitabu.Modules.Deals.PickupMtaani;
 using Vitabu.Modules.Deals.Services;
 using Vitabu.Modules.Deals.Validation;
 
@@ -16,6 +17,51 @@ public static class DealsEndpoints
 {
     public static IEndpointRouteBuilder MapDealsEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/mtaani/locations", async (
+            string? search,
+            IPickupMtaaniClient mtaani,
+            CancellationToken ct) =>
+        {
+            var items = await mtaani.ListLocationsAsync(search, ct);
+            return Results.Ok(items.Select(l => new MtaaniLocationCard(l.Id, l.Name, l.ZoneId)).ToList());
+        })
+        .WithName("listMtaaniLocations")
+        .WithTags("PickupMtaani");
+
+        app.MapGet("/mtaani/agents", async (
+            int? location_id,
+            string? search,
+            IPickupMtaaniClient mtaani,
+            CancellationToken ct) =>
+        {
+            var items = await mtaani.ListAgentsAsync(location_id, search, ct);
+            return Results.Ok(items.Select(a => new MtaaniAgentCard(
+                a.Id,
+                a.BusinessName,
+                a.LocationId,
+                a.LocationName,
+                a.Area)).ToList());
+        })
+        .WithName("listMtaaniAgents")
+        .WithTags("PickupMtaani");
+
+        app.MapGet("/mtaani/delivery-charge", async (
+            int sender_agent_id,
+            int receiver_agent_id,
+            IPickupMtaaniClient mtaani,
+            CancellationToken ct) =>
+        {
+            var charge = await mtaani.GetAgentPackageChargeAsync(sender_agent_id, receiver_agent_id, ct);
+            if (charge is null)
+            {
+                return Results.NotFound();
+            }
+
+            return Results.Ok(new MtaaniDeliveryChargeCard(charge.AmountKes, charge.Currency ?? "KES"));
+        })
+        .WithName("getMtaaniDeliveryCharge")
+        .WithTags("PickupMtaani");
+
         app.MapPost("/listings/{listingId:guid}/interests", async (
             Guid listingId,
             CreateInterestRequest request,

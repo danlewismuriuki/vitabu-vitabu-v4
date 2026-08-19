@@ -16,6 +16,14 @@ type ListingDetail = {
   price_kes?: number | null;
 };
 
+type MtaaniAgentCard = {
+  id: number;
+  business_name: string;
+  location_id?: number | null;
+  location_name?: string | null;
+  area?: string | null;
+};
+
 export default function ArrangePage() {
   const { listingId } = useParams<{ listingId: string }>();
   const router = useRouter();
@@ -24,6 +32,8 @@ export default function ArrangePage() {
   const [loading, setLoading] = useState(false);
   const [city, setCity] = useState("");
   const [handoff, setHandoff] = useState<"meetup" | "pickup_mtaani">("meetup");
+  const [mtaaniAgentId, setMtaaniAgentId] = useState("");
+  const [agents, setAgents] = useState<MtaaniAgentCard[]>([]);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -50,20 +60,45 @@ export default function ArrangePage() {
     })();
   }, [listingId, router]);
 
+  useEffect(() => {
+    if (handoff !== "pickup_mtaani") {
+      setAgents([]);
+      setMtaaniAgentId("");
+      return;
+    }
+    const search = city.trim() || listing?.city || "";
+    (async () => {
+      try {
+        const qs = search
+          ? `/mtaani/agents?search=${encodeURIComponent(search)}`
+          : "/mtaani/agents";
+        const list = await apiFetch<MtaaniAgentCard[]>(qs);
+        setAgents(list);
+        if (list.length === 1) setMtaaniAgentId(String(list[0].id));
+      } catch {
+        setAgents([]);
+      }
+    })();
+  }, [handoff, city, listing?.city]);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setErrors([]);
     setLoading(true);
     const token = getToken();
     try {
+      const body: Record<string, unknown> = {
+        handoff_mode: handoff,
+        city,
+        message: message || null,
+      };
+      if (handoff === "pickup_mtaani") {
+        body.mtaani_agent_id = mtaaniAgentId ? Number(mtaaniAgentId) : null;
+      }
       const created = await apiFetch<{ id: string }>(`/listings/${listingId}/interests`, {
         method: "POST",
         token,
-        body: JSON.stringify({
-          handoff_mode: handoff,
-          city,
-          message: message || null,
-        }),
+        body: JSON.stringify(body),
       });
       router.push(`/my-interests?sent=${created.id}`);
     } catch (err) {
@@ -80,6 +115,8 @@ export default function ArrangePage() {
       setLoading(false);
     }
   }
+
+  const selected = agents.find((a) => String(a.id) === mtaaniAgentId);
 
   return (
     <main className="min-h-screen bg-neutral-50 bg-kitenge-pattern">
@@ -136,6 +173,40 @@ export default function ArrangePage() {
                 ))}
               </div>
             </div>
+            {handoff === "pickup_mtaani" ? (
+              <div>
+                <label className={labelClass} htmlFor="agent">
+                  Pickup Mtaani agent
+                </label>
+                <select
+                  id="agent"
+                  required
+                  className={fieldClass}
+                  value={mtaaniAgentId}
+                  onChange={(e) => setMtaaniAgentId(e.target.value)}
+                >
+                  <option value="">Select an agent…</option>
+                  {agents.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.business_name}
+                      {a.location_name ? ` · ${a.location_name}` : ""}
+                      {a.area ? ` (${a.area})` : ""}
+                    </option>
+                  ))}
+                </select>
+                {agents.length === 0 ? (
+                  <p className="mt-2 text-xs text-neutral-500">
+                    No agents matched this city. Try Nairobi, Kisumu, or Mombasa (dev stub).
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-neutral-600">
+                    {selected
+                      ? `Drop / collect at ${selected.business_name}. Agent fees are paid at the point — Vitabu does not collect them.`
+                      : "Agent list comes from Pickup Mtaani (dev stub until ApiKey is configured)."}
+                  </p>
+                )}
+              </div>
+            ) : null}
             <div>
               <label className={labelClass} htmlFor="message">
                 Note to seller (optional)

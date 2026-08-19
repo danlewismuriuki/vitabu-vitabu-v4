@@ -6,13 +6,32 @@ namespace Vitabu.Modules.Deals.Contracts;
 public sealed record CreateInterestRequest(
     HandoffMode HandoffMode,
     string City,
-    string? Message);
+    string? Message,
+    int? MtaaniAgentId = null);
 
 public sealed record PartySnippet(
     Guid Id,
     string DisplayName,
     string City,
     string? PhoneE164);
+
+public sealed record MtaaniAgentSnippet(
+    int Id,
+    string BusinessName,
+    int? LocationId,
+    string? LocationName,
+    int? EstimatedFeeKes);
+
+public sealed record MtaaniLocationCard(int Id, string Name, int? ZoneId);
+
+public sealed record MtaaniAgentCard(
+    int Id,
+    string BusinessName,
+    int? LocationId,
+    string? LocationName,
+    string? Area);
+
+public sealed record MtaaniDeliveryChargeCard(int AmountKes, string Currency);
 
 public sealed record InterestDetail(
     Guid Id,
@@ -30,7 +49,8 @@ public sealed record InterestDetail(
     DateTime? SellerCompletedAtUtc,
     string? DisputeReason,
     PartySnippet Buyer,
-    PartySnippet Seller);
+    PartySnippet Seller,
+    MtaaniAgentSnippet? MtaaniAgent = null);
 
 public sealed record InterestCard(
     Guid Id,
@@ -41,7 +61,8 @@ public sealed record InterestCard(
     string City,
     string BuyerDisplayName,
     DateTime CreatedAtUtc,
-    DateTime? ReservedUntilUtc);
+    DateTime? ReservedUntilUtc,
+    string? MtaaniAgentName = null);
 
 public sealed record InterestPage(
     IReadOnlyList<InterestCard> Items,

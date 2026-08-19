@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AuthShell, FormError, fieldClass, labelClass } from "@/components/AuthShell";
 import { ApiError, apiFetch, AuthResponse, fieldErrors } from "@/lib/api";
 import { saveSession } from "@/lib/auth-storage";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +35,7 @@ export default function SignupPage() {
         phone_verified: data.user.phone_verified,
         phone_e164: data.user.phone_e164,
       });
-      router.push("/verify-phone");
+      window.location.assign("/verify-phone");
     } catch (err) {
       if (err instanceof ApiError) setErrors(fieldErrors(err.problem));
       else setErrors(["Cannot reach the API. Is it running on :5080?"]);

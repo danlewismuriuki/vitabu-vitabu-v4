@@ -4,6 +4,7 @@ using Vitabu.Modules.Deals.Contracts;
 using Vitabu.Modules.Deals.Domain;
 using Vitabu.Modules.Deals.Entities;
 using Vitabu.Modules.Deals.Persistence;
+using Vitabu.Modules.Deals.PickupMtaani;
 using Vitabu.Modules.Identity.Persistence;
 using Vitabu.Modules.Listings.Domain;
 using Vitabu.Modules.Listings.Persistence;
@@ -32,7 +33,8 @@ public sealed class DealsService(
     IDealsDbContext dealsDb,
     IListingsDbContext listingsDb,
     IIdentityDbContext identityDb,
-    INotificationService notifications) : IDealsService
+    INotificationService notifications,
+    IPickupMtaaniClient mtaani) : IDealsService
 {
     private static readonly TimeSpan ReserveWindow = TimeSpan.FromHours(72);
 
@@ -70,6 +72,8 @@ public sealed class DealsService(
             throw new ConflictException("interest_already_exists", "You already have an open request on this listing.");
         }
 
+        var agent = await ResolveMtaaniAgentAsync(request.HandoffMode, request.MtaaniAgentId, ct);
+
         var now = DateTime.UtcNow;
         var interest = new DealInterest
         {
@@ -81,6 +85,11 @@ public sealed class DealsService(
             HandoffMode = request.HandoffMode,
             City = request.City.Trim(),
             Message = string.IsNullOrWhiteSpace(request.Message) ? null : request.Message.Trim(),
+            MtaaniAgentId = agent?.Id,
+            MtaaniAgentName = agent?.BusinessName,
+            MtaaniLocationId = agent?.LocationId,
+            MtaaniLocationName = agent?.LocationName,
+            MtaaniEstimatedFeeKes = agent is null ? null : 0,
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         };
@@ -140,7 +149,8 @@ public sealed class DealsService(
             r.i.City,
             names.GetValueOrDefault(r.i.BuyerUserId, "Parent"),
             r.i.CreatedAtUtc,
-            r.i.ReservedUntilUtc)).ToList();
+            r.i.ReservedUntilUtc,
+            r.i.MtaaniAgentName)).ToList();
 
         var totalPages = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
         return new InterestPage(items, page, pageSize, total, totalPages);
@@ -185,7 +195,8 @@ public sealed class DealsService(
             i.City,
             names.GetValueOrDefault(i.BuyerUserId, "Parent"),
             i.CreatedAtUtc,
-            i.ReservedUntilUtc)).ToList();
+            i.ReservedUntilUtc,
+            i.MtaaniAgentName)).ToList();
 
         var totalPages = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
         return new InterestPage(items, page, pageSize, total, totalPages);
@@ -688,6 +699,17 @@ public sealed class DealsService(
         var seller = users.First(u => u.Id == interest.SellerUserId);
         var unlock = interest.Status is InterestStatus.Accepted or InterestStatus.Disputed;
 
+        MtaaniAgentSnippet? mtaaniAgent = null;
+        if (interest.MtaaniAgentId is { } agentId)
+        {
+            mtaaniAgent = new MtaaniAgentSnippet(
+                agentId,
+                interest.MtaaniAgentName ?? $"Agent {agentId}",
+                interest.MtaaniLocationId,
+                interest.MtaaniLocationName,
+                interest.MtaaniEstimatedFeeKes);
+        }
+
         return new InterestDetail(
             interest.Id,
             interest.ListingId,
@@ -704,7 +726,38 @@ public sealed class DealsService(
             interest.SellerCompletedAtUtc,
             interest.DisputeReason,
             new PartySnippet(buyer.Id, buyer.DisplayName, buyer.City, unlock ? buyer.PhoneE164 : null),
-            new PartySnippet(seller.Id, seller.DisplayName, seller.City, unlock ? seller.PhoneE164 : null));
+            new PartySnippet(seller.Id, seller.DisplayName, seller.City, unlock ? seller.PhoneE164 : null),
+            mtaaniAgent);
+    }
+
+    private async Task<MtaaniAgent?> ResolveMtaaniAgentAsync(
+        HandoffMode mode,
+        int? mtaaniAgentId,
+        CancellationToken ct)
+    {
+        if (mode == HandoffMode.Meetup)
+        {
+            if (mtaaniAgentId is not null)
+            {
+                throw new ValidationException(
+                    "mtaani_agent_id is only allowed for pickup_mtaani handoff.",
+                    new Dictionary<string, string[]> { ["mtaani_agent_id"] = ["Not allowed for meetup."] });
+            }
+
+            return null;
+        }
+
+        if (mtaaniAgentId is null)
+        {
+            throw new ValidationException(
+                "mtaani_agent_id is required for pickup_mtaani handoff.",
+                new Dictionary<string, string[]> { ["mtaani_agent_id"] = ["Required."] });
+        }
+
+        var agent = await mtaani.GetAgentAsync(mtaaniAgentId.Value, ct)
+            ?? throw NotFoundException.For("mtaani_agent", mtaaniAgentId.Value);
+
+        return agent;
     }
 
     private async Task<Identity.Entities.User> RequirePhoneVerifiedAsync(Guid userId, CancellationToken ct)
