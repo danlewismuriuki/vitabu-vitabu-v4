@@ -45,6 +45,17 @@ public static class IdentityEndpoints
             return Results.Ok(profile);
         }).RequireAuthorization().WithName("getMe");
 
+        group.MapPatch("/me/notification-prefs", async (
+            UpdateNotificationPrefsRequest request,
+            ClaimsPrincipal principal,
+            IIdentityService identity,
+            CancellationToken ct) =>
+        {
+            var userId = RequireUserId(principal);
+            var profile = await identity.UpdateNotificationPrefsAsync(userId, request, ct);
+            return Results.Ok(profile);
+        }).RequireAuthorization().WithName("updateNotificationPrefs");
+
         group.MapPost("/forgot-password", async (
             ForgotPasswordRequest request,
             IValidator<ForgotPasswordRequest> validator,

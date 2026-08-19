@@ -109,6 +109,29 @@ paths:
         "401":
           $ref: "#/components/responses/Problem"
 
+  /auth/me/notification-prefs:
+    patch:
+      tags: [Auth]
+      operationId: updateNotificationPrefs
+      summary: Update notification preferences (wishlist email/in-app alerts)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationPrefsRequest"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Problem"
+
   /auth/forgot-password:
     post:
       tags: [Auth]
@@ -1613,6 +1636,7 @@ components:
           email_verified,
           is_staff,
           created_at_utc,
+          wishlist_alerts_enabled,
         ]
       properties:
         id:
@@ -1641,6 +1665,15 @@ components:
         created_at_utc:
           type: string
           format: date-time
+        wishlist_alerts_enabled:
+          type: boolean
+          description: When true, email + in-app alerts for similar new listings and wishlisted books becoming unavailable
+    UpdateNotificationPrefsRequest:
+      type: object
+      required: [wishlist_alerts_enabled]
+      properties:
+        wishlist_alerts_enabled:
+          type: boolean
     AuthResponse:
       type: object
       required: [access_token, token_type, expires_in, user]

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
-import { ApiError, apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, UserProfile } from "@/lib/api";
 import { getToken } from "@/lib/auth-storage";
 
 type ListingCard = {
@@ -30,12 +30,18 @@ type WishlistPage = { items: WishlistItem[] };
 export default function WishlistPage() {
   const router = useRouter();
   const [items, setItems] = useState<WishlistItem[]>([]);
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [prefsBusy, setPrefsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function load(token: string) {
-    const page = await apiFetch<WishlistPage>("/me/wishlist?page_size=50", { token });
+    const [page, me] = await Promise.all([
+      apiFetch<WishlistPage>("/me/wishlist?page_size=50", { token }),
+      apiFetch<UserProfile>("/auth/me", { token }),
+    ]);
     setItems(page.items);
+    setAlertsEnabled(me.wishlist_alerts_enabled);
   }
 
   useEffect(() => {
@@ -53,6 +59,26 @@ export default function WishlistPage() {
       }
     })();
   }, [router]);
+
+  async function toggleAlerts(next: boolean) {
+    const token = getToken();
+    if (!token) return;
+    setPrefsBusy(true);
+    setError(null);
+    try {
+      const me = await apiFetch<UserProfile>("/auth/me/notification-prefs", {
+        method: "PATCH",
+        token,
+        body: JSON.stringify({ wishlist_alerts_enabled: next }),
+      });
+      setAlertsEnabled(me.wishlist_alerts_enabled);
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.problem.message);
+      else setError("Could not update alert preferences.");
+    } finally {
+      setPrefsBusy(false);
+    }
+  }
 
   async function remove(listingId: string) {
     const token = getToken();
@@ -75,6 +101,18 @@ export default function WishlistPage() {
       <div className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-poppins text-2xl font-semibold text-primary-800">Wishlist</h1>
         <p className="mt-1 text-sm text-neutral-500">Books you saved for later.</p>
+        <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-neutral-700">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={alertsEnabled}
+            disabled={prefsBusy}
+            onChange={(e) => void toggleAlerts(e.target.checked)}
+          />
+          <span>
+            Email &amp; in-app alerts when a similar CBC book is listed, or a saved book becomes unavailable.
+          </span>
+        </label>
         {error ? <p className="mt-4 text-sm text-accent-700">{error}</p> : null}
         <ul className="mt-6 space-y-3">
           {items.map((item) => (

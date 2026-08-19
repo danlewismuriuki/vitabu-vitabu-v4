@@ -28,7 +28,10 @@ public sealed record UserProfile(
     DateTime? PhoneVerifiedAtUtc,
     bool EmailVerified,
     bool IsStaff,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    bool WishlistAlertsEnabled = true);
+
+public sealed record UpdateNotificationPrefsRequest(bool WishlistAlertsEnabled);
 
 public sealed record AuthResponse(
     string AccessToken,

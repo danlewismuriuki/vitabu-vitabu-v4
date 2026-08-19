@@ -16,6 +16,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.DisplayName).HasMaxLength(80).IsRequired();
         builder.Property(x => x.City).HasMaxLength(80).IsRequired();
         builder.Property(x => x.PhoneE164).HasMaxLength(20);
+        builder.Property(x => x.WishlistAlertsEnabled).HasDefaultValue(true);
         builder.HasIndex(x => x.NormalizedEmail).IsUnique();
         builder.HasIndex(x => x.PhoneE164)
             .IsUnique()

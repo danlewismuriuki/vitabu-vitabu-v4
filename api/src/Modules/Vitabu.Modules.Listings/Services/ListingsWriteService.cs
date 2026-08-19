@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Vitabu.Core.Abstractions;
 using Vitabu.Core.Exceptions;
 using Vitabu.Modules.Catalog.Persistence;
 using Vitabu.Modules.Identity.Persistence;
@@ -23,7 +24,8 @@ public interface IListingsWriteService
 public sealed class ListingsWriteService(
     IListingsDbContext listingsDb,
     IIdentityDbContext identityDb,
-    ICatalogDbContext catalogDb) : IListingsWriteService
+    ICatalogDbContext catalogDb,
+    IWishlistAlertService wishlistAlerts) : IListingsWriteService
 {
     public async Task<ListingDetail> CreateAsync(
         Guid sellerUserId,
@@ -60,6 +62,16 @@ public sealed class ListingsWriteService(
 
         listingsDb.Listings.Add(listing);
         await listingsDb.SaveChangesAsync(ct);
+
+        await wishlistAlerts.NotifySimilarListingCreatedAsync(
+            listing.Id,
+            listing.SellerUserId,
+            listing.Title,
+            listing.Grade,
+            listing.Subject,
+            listing.City,
+            ct);
+
         return ToDetail(listing, seller.DisplayName, listing.City, school);
     }
 

@@ -40,6 +40,7 @@ public sealed class IdentityService(
             City = request.City.Trim(),
             AcceptedTermsAtUtc = now,
             ConfirmedParentGuardian = request.ConfirmParentGuardian,
+            WishlistAlertsEnabled = true,
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         };
@@ -79,6 +80,18 @@ public sealed class IdentityService(
     public async Task<UserProfile> GetMeAsync(Guid userId, CancellationToken ct = default)
     {
         var user = await GetUserOrThrowAsync(userId, ct);
+        return MapProfile(user);
+    }
+
+    public async Task<UserProfile> UpdateNotificationPrefsAsync(
+        Guid userId,
+        UpdateNotificationPrefsRequest request,
+        CancellationToken ct = default)
+    {
+        var user = await GetUserOrThrowAsync(userId, ct);
+        user.WishlistAlertsEnabled = request.WishlistAlertsEnabled;
+        user.UpdatedAtUtc = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
         return MapProfile(user);
     }
 
@@ -260,7 +273,8 @@ public sealed class IdentityService(
         user.PhoneVerifiedAtUtc,
         user.EmailVerifiedAtUtc != null,
         user.IsStaff,
-        user.CreatedAtUtc);
+        user.CreatedAtUtc,
+        user.WishlistAlertsEnabled);
 
     private static string NormalizeEmail(string email) => email.Trim().ToUpperInvariant();
 
