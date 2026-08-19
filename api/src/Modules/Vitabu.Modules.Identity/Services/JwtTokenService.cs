@@ -23,6 +23,7 @@ public sealed class JwtTokenService(IConfiguration configuration) : IJwtTokenSer
             new(JwtRegisteredClaimNames.Email, user.Email),
             new("display_name", user.DisplayName),
             new("phone_verified", (user.PhoneVerifiedAtUtc != null).ToString().ToLowerInvariant()),
+            new("is_staff", user.IsStaff.ToString().ToLowerInvariant()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

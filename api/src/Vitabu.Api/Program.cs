@@ -5,6 +5,7 @@ using Vitabu.Api.Middleware;
 using Vitabu.Infrastructure;
 using Vitabu.Infrastructure.Persistence;
 using Vitabu.Infrastructure.Seed;
+using Vitabu.Modules.Admin;
 using Vitabu.Modules.Catalog;
 using Vitabu.Modules.Deals;
 using Vitabu.Modules.Identity;
@@ -27,6 +28,7 @@ builder.Services.AddCatalogModule();
 builder.Services.AddListingsModule();
 builder.Services.AddNotificationsModule();
 builder.Services.AddDealsModule();
+builder.Services.AddAdminModule();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -66,6 +68,7 @@ app.MapCatalogEndpoints();
 app.MapListingsEndpoints();
 app.MapDealsEndpoints();
 app.MapNotificationsEndpoints();
+app.MapAdminEndpoints();
 
 app.Run();
 

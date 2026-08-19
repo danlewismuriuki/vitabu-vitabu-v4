@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Modules\Vitabu.Modules.Listings\Vitabu.Modules.Listings.csproj" />
     <ProjectReference Include="..\Modules\Vitabu.Modules.Deals\Vitabu.Modules.Deals.csproj" />
     <ProjectReference Include="..\Modules\Vitabu.Modules.Notifications\Vitabu.Modules.Notifications.csproj" />
+    <ProjectReference Include="..\Modules\Vitabu.Modules.Admin\Vitabu.Modules.Admin.csproj" />
   </ItemGroup>
 
   <ItemGroup>
