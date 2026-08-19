@@ -11,6 +11,8 @@ public sealed record CatalogFacets(
 
 public sealed record SellerSnippet(string DisplayName, string City);
 
+public sealed record SchoolSnippet(Guid Id, string Name, string City);
+
 public sealed record ListingCard(
     Guid Id,
     string Title,
@@ -24,7 +26,9 @@ public sealed record ListingCard(
     decimal? PriceKes,
     string? CoverImageUrl,
     int InterestCount,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    Guid? SchoolId = null,
+    string? SchoolName = null);
 
 public sealed record ListingDetail(
     Guid Id,
@@ -42,7 +46,8 @@ public sealed record ListingDetail(
     DateTime CreatedAtUtc,
     string Description,
     string Slug,
-    SellerSnippet Seller);
+    SellerSnippet Seller,
+    SchoolSnippet? School = null);
 
 public sealed record ListingPage(
     IReadOnlyList<ListingCard> Items,
@@ -58,6 +63,7 @@ public sealed record ListListingsQuery(
     string? City,
     ListingIntent? Intent,
     BookCondition? Condition,
+    Guid? SchoolId = null,
     int Page = 1,
     int PageSize = 20);
 
@@ -72,7 +78,8 @@ public sealed record CreateListingRequest(
     BookCondition Condition,
     decimal? PriceKes,
     string Description,
-    string CoverImageUrl);
+    string CoverImageUrl,
+    Guid? SchoolId = null);
 
 public sealed record UpdateListingRequest(
     Guid? CbcTitleId,
@@ -85,7 +92,8 @@ public sealed record UpdateListingRequest(
     BookCondition Condition,
     decimal? PriceKes,
     string Description,
-    string CoverImageUrl);
+    string CoverImageUrl,
+    Guid? SchoolId = null);
 
 public sealed record ImageStubRequest(string? Filename);
 

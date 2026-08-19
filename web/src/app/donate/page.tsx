@@ -10,8 +10,16 @@ type ListingPage = {
   total_pages: number;
 };
 
+type SchoolCard = { id: string; name: string; city: string; contact_name?: string | null };
+
+type SchoolPage = { items: SchoolCard[] };
+
 async function loadDonateListings() {
   return apiFetch<ListingPage>("/listings?intent=donate_school&page_size=24");
+}
+
+async function loadSchools() {
+  return apiFetch<SchoolPage>("/schools?page_size=50");
 }
 
 export const metadata = {
@@ -27,9 +35,13 @@ export default async function DonatePage() {
     total_items: 0,
     total_pages: 0,
   };
+  let schools: SchoolCard[] = [];
   let error: string | null = null;
   try {
-    page = await loadDonateListings();
+    [page, schools] = await Promise.all([
+      loadDonateListings(),
+      loadSchools().then((p) => p.items),
+    ]);
   } catch {
     error = "Could not load donate listings. Is the API running on :5080?";
   }
@@ -55,11 +67,37 @@ export default async function DonatePage() {
       <div className="mx-auto max-w-6xl px-4 py-10">
         <h1 className="font-poppins text-3xl font-bold text-primary-800">Donate to schools</h1>
         <p className="mt-2 max-w-2xl text-neutral-600">
-          Parents listing books for school drives. Arrange handoff the same way as free giveaways —
-          school profiles and campaigns come later.
+          Verified schools and parent donate listings. Arrange handoff like a free giveaway.
         </p>
         {error ? <p className="mt-6 text-sm text-accent-700">{error}</p> : null}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+        {schools.length > 0 ? (
+          <section className="mt-8">
+            <h2 className="font-poppins text-xl font-semibold text-primary-800">Schools</h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {schools.map((s) => (
+                <li key={s.id} className="rounded-xl bg-white p-4 shadow-md">
+                  <p className="font-poppins font-semibold text-primary-800">{s.name}</p>
+                  <p className="text-sm text-neutral-600">{s.city}</p>
+                  {s.contact_name ? (
+                    <p className="mt-1 text-xs text-neutral-500">{s.contact_name}</p>
+                  ) : null}
+                  <Link
+                    href={`/books?intent=donate_school&school_id=${s.id}`}
+                    className="mt-2 inline-block text-sm text-accent-600"
+                  >
+                    See donate listings
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        <h2 className="mt-10 font-poppins text-xl font-semibold text-primary-800">
+          Donate listings
+        </h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {page.items.map((listing) => (
             <ListingCardView key={listing.id} listing={listing} />
           ))}

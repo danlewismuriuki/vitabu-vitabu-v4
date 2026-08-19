@@ -20,7 +20,7 @@ type Facets = {
 
 async function loadListings(sp: Record<string, string | string[] | undefined>) {
   const params = new URLSearchParams();
-  for (const key of ["q", "grade", "subject", "city", "intent", "condition", "page"]) {
+  for (const key of ["q", "grade", "subject", "city", "intent", "condition", "school_id", "page"]) {
     const value = sp[key];
     if (typeof value === "string" && value) params.set(key, value);
   }
@@ -70,6 +70,7 @@ export default async function BooksPage({
     subject: typeof sp.subject === "string" ? sp.subject : "",
     city: typeof sp.city === "string" ? sp.city : "",
     intent: typeof sp.intent === "string" ? sp.intent : "",
+    school_id: typeof sp.school_id === "string" ? sp.school_id : "",
   };
 
   return (
@@ -103,6 +104,9 @@ export default async function BooksPage({
         </p>
 
         <form className="mt-6 grid gap-3 rounded-xl bg-white p-4 shadow-md md:grid-cols-6">
+          {selected.school_id ? (
+            <input type="hidden" name="school_id" value={selected.school_id} />
+          ) : null}
           <input
             name="q"
             defaultValue={selected.q}

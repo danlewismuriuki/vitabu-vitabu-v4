@@ -20,6 +20,7 @@ type ListingDetail = {
   description: string;
   slug: string;
   seller: { display_name: string; city: string };
+  school?: { id: string; name: string; city: string } | null;
 };
 
 async function getListing(id: string) {
@@ -97,6 +98,11 @@ export default async function BookDetailPage({
           {listing.term ? ` · ${listing.term}` : ""} · {listing.condition.replaceAll("_", " ")}
         </p>
         <p className="mt-4 font-poppins text-2xl font-semibold text-primary-700">{price}</p>
+        {listing.school ? (
+          <p className="mt-2 text-sm text-primary-700">
+            For {listing.school.name} · {listing.school.city}
+          </p>
+        ) : null}
         {listing.interest_count > 0 ? (
           <p className="mt-2 text-sm text-neutral-500">{listing.interest_count} interested</p>
         ) : null}

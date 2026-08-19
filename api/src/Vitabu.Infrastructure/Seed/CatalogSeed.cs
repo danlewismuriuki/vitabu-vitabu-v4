@@ -88,6 +88,7 @@ public static class CatalogSeed
         if (await db.Listings.AnyAsync(ct))
         {
             await EnsureAdminAsync(db, hasher, config, logger, ct);
+            await EnsureSchoolsAsync(db, logger, ct);
             return;
         }
 
@@ -138,6 +139,52 @@ public static class CatalogSeed
         await db.SaveChangesAsync(ct);
         logger.LogInformation("Seeded {Count} demo listings", titles.Count);
         await EnsureAdminAsync(db, hasher, config, logger, ct);
+        await EnsureSchoolsAsync(db, logger, ct);
+    }
+
+    private static async Task EnsureSchoolsAsync(VitabuDbContext db, ILogger logger, CancellationToken ct)
+    {
+        if (await db.Schools.AnyAsync(ct))
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var schools = new[]
+        {
+            new School
+            {
+                Id = Guid.NewGuid(),
+                Name = "Olympic Primary School",
+                City = "Nairobi",
+                ContactName = "Head teacher",
+                IsVerified = true,
+                Notes = "Kibera — open to book donations.",
+                CreatedAtUtc = now
+            },
+            new School
+            {
+                Id = Guid.NewGuid(),
+                Name = "Kisumu Union Primary",
+                City = "Kisumu",
+                ContactName = "Donation desk",
+                IsVerified = true,
+                CreatedAtUtc = now
+            },
+            new School
+            {
+                Id = Guid.NewGuid(),
+                Name = "Tononoka Primary School",
+                City = "Mombasa",
+                ContactName = "Deputy head",
+                IsVerified = true,
+                CreatedAtUtc = now
+            }
+        };
+
+        db.Schools.AddRange(schools);
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Count} schools", schools.Length);
     }
 
     private static async Task EnsureAdminAsync(

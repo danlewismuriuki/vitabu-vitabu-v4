@@ -31,5 +31,6 @@ public sealed class ListingConfiguration : IEntityTypeConfiguration<Listing>
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => new { x.Status, x.City, x.Grade, x.Subject });
         builder.HasIndex(x => x.CreatedAtUtc);
+        builder.HasIndex(x => x.SchoolId);
     }
 }

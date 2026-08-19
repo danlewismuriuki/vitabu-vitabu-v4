@@ -21,7 +21,10 @@ type ListingDetail = {
   description: string;
   cover_image_url?: string | null;
   status: string;
+  school?: { id: string; name: string; city: string } | null;
 };
+
+type SchoolCard = { id: string; name: string; city: string };
 
 const CONDITIONS = [
   { value: "like_new", label: "Like new" },
@@ -46,6 +49,8 @@ export default function EditListingPage() {
   const [priceKes, setPriceKes] = useState("");
   const [description, setDescription] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [schoolId, setSchoolId] = useState("");
+  const [schools, setSchools] = useState<SchoolCard[]>([]);
 
   useEffect(() => {
     const token = getToken();
@@ -55,7 +60,10 @@ export default function EditListingPage() {
     }
     (async () => {
       try {
-        const detail = await apiFetch<ListingDetail>(`/me/listings/${id}`, { token });
+        const [detail, schoolPage] = await Promise.all([
+          apiFetch<ListingDetail>(`/me/listings/${id}`, { token }),
+          apiFetch<{ items: SchoolCard[] }>("/schools?page_size=50"),
+        ]);
         setTitle(detail.title);
         setGrade(detail.grade);
         setSubject(detail.subject);
@@ -66,6 +74,8 @@ export default function EditListingPage() {
         setPriceKes(detail.price_kes != null ? String(detail.price_kes) : "");
         setDescription(detail.description);
         setCoverImageUrl(detail.cover_image_url ?? "");
+        setSchoolId(detail.school?.id ?? "");
+        setSchools(schoolPage.items);
         setReady(true);
       } catch (err) {
         if (err instanceof ApiError) setErrors(fieldErrors(err.problem));
@@ -91,6 +101,7 @@ export default function EditListingPage() {
         description,
         cover_image_url: coverImageUrl,
         price_kes: intent === "sale" ? Number(priceKes) : null,
+        school_id: intent === "donate_school" && schoolId ? schoolId : null,
       };
       await apiFetch(`/listings/${id}`, {
         method: "PATCH",
@@ -199,6 +210,26 @@ export default function EditListingPage() {
                   <option value="donate_school">Donate school</option>
                 </select>
               </div>
+              {intent === "donate_school" ? (
+                <div>
+                  <label className={labelClass} htmlFor="school">
+                    Target school (optional)
+                  </label>
+                  <select
+                    id="school"
+                    className={fieldClass}
+                    value={schoolId}
+                    onChange={(e) => setSchoolId(e.target.value)}
+                  >
+                    <option value="">Open donate — any school</option>
+                    {schools.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} · {s.city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               {intent === "sale" ? (
                 <div>
                   <label className={labelClass} htmlFor="price">

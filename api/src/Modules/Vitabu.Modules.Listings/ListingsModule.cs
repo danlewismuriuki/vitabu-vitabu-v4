@@ -29,6 +29,7 @@ public static class ListingsEndpoints
             string? city,
             string? intent,
             string? condition,
+            Guid? school_id,
             int? page,
             int? page_size,
             IListingsReadService listings,
@@ -41,6 +42,7 @@ public static class ListingsEndpoints
                 city,
                 ParseEnum<ListingIntent>(intent),
                 ParseEnum<BookCondition>(condition),
+                school_id,
                 page ?? 1,
                 page_size ?? 20);
 
