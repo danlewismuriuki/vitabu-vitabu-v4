@@ -21,7 +21,8 @@ How we ship features. Backend detail: [backend-cemes-practices.md](backend-cemes
 | S5 | Complete / dispute / admin moderate |
 | S6 | Wishlist (save listings) |
 | S7 | donate_school intent + donated complete |
-| S8+ | Messaging polish, M-Pesa, school profiles, … |
+| S8 | Messaging (1:1 threads per listing) |
+| S9+ | M-Pesa, school profiles, … |
 
 ## Per-slice steps
 1. Update OpenAPI (+ optional `docs/slices/sN-*-contract.md`)  

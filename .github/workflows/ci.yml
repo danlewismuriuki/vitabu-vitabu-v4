@@ -103,5 +103,7 @@ jobs:
           grep -q "operationId: addToWishlist" contract/openapi.yaml
           grep -q "donate_school" contract/openapi.yaml
           grep -q "donated" contract/openapi.yaml
+          grep -q "operationId: openListingThread" contract/openapi.yaml
+          grep -q "operationId: sendThreadMessage" contract/openapi.yaml
           grep -q "Problem:" contract/openapi.yaml
           grep -q "bearerAuth:" contract/openapi.yaml

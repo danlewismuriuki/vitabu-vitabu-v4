@@ -8,6 +8,7 @@ using Vitabu.Modules.Identity.Persistence;
 using Vitabu.Modules.Listings.Persistence;
 using Vitabu.Modules.Notifications.Persistence;
 using Vitabu.Modules.Wishlist.Persistence;
+using Vitabu.Modules.Messaging.Persistence;
 
 namespace Vitabu.Infrastructure;
 
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IDealsDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
         services.AddScoped<INotificationsDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
         services.AddScoped<IWishlistDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
+        services.AddScoped<IMessagingDbContext>(sp => sp.GetRequiredService<VitabuDbContext>());
 
         return services;
     }

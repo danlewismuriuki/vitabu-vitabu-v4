@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.8.0
+  version: 0.9.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
@@ -24,6 +24,8 @@ tags:
     description: In-app notifications (email fan-out on key deal events)
   - name: Wishlist
     description: Save listings for later
+  - name: Messaging
+    description: 1:1 parent–seller threads per listing
   - name: Admin
     description: Staff moderation (hide listings, resolve reports)
 paths:
@@ -1182,6 +1184,133 @@ paths:
         "401":
           $ref: "#/components/responses/Problem"
 
+  /listings/{id}/threads:
+    post:
+      tags: [Messaging]
+      operationId: openListingThread
+      summary: Open or reuse a 1:1 thread with the listing seller
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Thread detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+
+  /me/threads:
+    get:
+      tags: [Messaging]
+      operationId: listMyThreads
+      summary: Message inbox for the current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Threads page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadPage"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /threads/{id}:
+    get:
+      tags: [Messaging]
+      operationId: getThread
+      summary: Thread detail with messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadDetail"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /threads/{id}/messages:
+    post:
+      tags: [Messaging]
+      operationId: sendThreadMessage
+      summary: Send a text message in a thread
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "200":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageItem"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1811,6 +1940,127 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WishlistItem"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    SendMessageRequest:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    MessageItem:
+      type: object
+      required: [id, sender_user_id, sender_display_name, body, created_at_utc]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sender_user_id:
+          type: string
+          format: uuid
+        sender_display_name:
+          type: string
+        body:
+          type: string
+        created_at_utc:
+          type: string
+          format: date-time
+    ThreadCard:
+      type: object
+      required:
+        [
+          id,
+          listing_id,
+          listing_title,
+          buyer_user_id,
+          seller_user_id,
+          other_party_name,
+          last_message_at_utc,
+          created_at_utc,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        listing_id:
+          type: string
+          format: uuid
+        listing_title:
+          type: string
+        buyer_user_id:
+          type: string
+          format: uuid
+        seller_user_id:
+          type: string
+          format: uuid
+        other_party_name:
+          type: string
+        last_message_preview:
+          type: string
+          nullable: true
+        last_message_at_utc:
+          type: string
+          format: date-time
+        created_at_utc:
+          type: string
+          format: date-time
+    ThreadDetail:
+      type: object
+      required:
+        [
+          id,
+          listing_id,
+          listing_title,
+          buyer_user_id,
+          seller_user_id,
+          other_party_name,
+          created_at_utc,
+          last_message_at_utc,
+          messages,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        listing_id:
+          type: string
+          format: uuid
+        listing_title:
+          type: string
+        buyer_user_id:
+          type: string
+          format: uuid
+        seller_user_id:
+          type: string
+          format: uuid
+        other_party_name:
+          type: string
+        created_at_utc:
+          type: string
+          format: date-time
+        last_message_at_utc:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageItem"
+    ThreadPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ThreadCard"
         page:
           type: integer
         page_size:

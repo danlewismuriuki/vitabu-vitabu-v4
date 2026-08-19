@@ -12,6 +12,7 @@ using Vitabu.Modules.Identity;
 using Vitabu.Modules.Listings;
 using Vitabu.Modules.Notifications;
 using Vitabu.Modules.Wishlist;
+using Vitabu.Modules.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,7 @@ builder.Services.AddNotificationsModule();
 builder.Services.AddDealsModule();
 builder.Services.AddAdminModule();
 builder.Services.AddWishlistModule();
+builder.Services.AddMessagingModule();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -72,6 +74,7 @@ app.MapDealsEndpoints();
 app.MapNotificationsEndpoints();
 app.MapAdminEndpoints();
 app.MapWishlistEndpoints();
+app.MapMessagingEndpoints();
 
 app.Run();
 

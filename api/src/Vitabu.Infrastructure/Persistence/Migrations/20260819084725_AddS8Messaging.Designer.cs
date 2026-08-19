@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Vitabu.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Vitabu.Infrastructure.Persistence;
 namespace Vitabu.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(VitabuDbContext))]
-    partial class VitabuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260819084725_AddS8Messaging")]
+    partial class AddS8Messaging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
