@@ -9,11 +9,14 @@ using Vitabu.Modules.Listings.Entities;
 using Vitabu.Modules.Listings.Persistence;
 using Vitabu.Modules.Notifications.Entities;
 using Vitabu.Modules.Notifications.Persistence;
+using Vitabu.Modules.Wishlist.Entities;
+using Vitabu.Modules.Wishlist.Persistence;
 
 namespace Vitabu.Infrastructure.Persistence;
 
 public sealed class VitabuDbContext(DbContextOptions<VitabuDbContext> options)
-    : DbContext(options), IIdentityDbContext, ICatalogDbContext, IListingsDbContext, IDealsDbContext, INotificationsDbContext
+    : DbContext(options), IIdentityDbContext, ICatalogDbContext, IListingsDbContext, IDealsDbContext,
+        INotificationsDbContext, IWishlistDbContext
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<PhoneOtpChallenge> PhoneOtpChallenges => Set<PhoneOtpChallenge>();
@@ -24,6 +27,7 @@ public sealed class VitabuDbContext(DbContextOptions<VitabuDbContext> options)
     public DbSet<DealRating> DealRatings => Set<DealRating>();
     public DbSet<ListingReport> ListingReports => Set<ListingReport>();
     public DbSet<AppNotification> Notifications => Set<AppNotification>();
+    public DbSet<WishlistEntry> WishlistEntries => Set<WishlistEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +36,7 @@ public sealed class VitabuDbContext(DbContextOptions<VitabuDbContext> options)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ListingConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DealInterestConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppNotificationConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WishlistEntryConfiguration).Assembly);
         base.OnModelCreating(modelBuilder);
     }
 }

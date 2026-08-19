@@ -19,7 +19,8 @@ How we ship features. Backend detail: [backend-cemes-practices.md](backend-cemes
 | S3 | Listings write + MinIO photos |
 | S4 | Deals arrange/interest + notifications |
 | S5 | Complete / dispute / admin moderate |
-| S6+ | Wishlist, donate_school, M-Pesa, … |
+| S6 | Wishlist (save listings) |
+| S7+ | donate_school, M-Pesa, … |
 
 ## Per-slice steps
 1. Update OpenAPI (+ optional `docs/slices/sN-*-contract.md`)  
