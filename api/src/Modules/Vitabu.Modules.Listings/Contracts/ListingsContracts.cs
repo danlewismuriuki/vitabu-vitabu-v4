@@ -60,3 +60,33 @@ public sealed record ListListingsQuery(
     BookCondition? Condition,
     int Page = 1,
     int PageSize = 20);
+
+public sealed record CreateListingRequest(
+    Guid? CbcTitleId,
+    string Title,
+    string Grade,
+    string Subject,
+    string? Term,
+    string City,
+    ListingIntent Intent,
+    BookCondition Condition,
+    decimal? PriceKes,
+    string Description,
+    string CoverImageUrl);
+
+public sealed record UpdateListingRequest(
+    Guid? CbcTitleId,
+    string Title,
+    string Grade,
+    string Subject,
+    string? Term,
+    string City,
+    ListingIntent Intent,
+    BookCondition Condition,
+    decimal? PriceKes,
+    string Description,
+    string CoverImageUrl);
+
+public sealed record ImageStubRequest(string? Filename);
+
+public sealed record ImageStubResponse(string Url);

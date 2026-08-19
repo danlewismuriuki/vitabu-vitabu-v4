@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.3.0
+  version: 0.5.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
@@ -17,7 +17,11 @@ tags:
   - name: Catalog
     description: CBC taxonomy facets and titles
   - name: Listings
-    description: Public marketplace listings (read in S2)
+    description: Marketplace listings (public read + authenticated sell)
+  - name: Deals
+    description: Interest / arrange / reserve between buyer and seller
+  - name: Notifications
+    description: In-app notifications (email fan-out on key deal events)
 paths:
   /health:
     get:
@@ -202,6 +206,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/CatalogFacets"
 
+  /catalog/titles:
+    get:
+      tags: [Catalog]
+      operationId: searchCatalogTitles
+      summary: CBC title search for smart sell input
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: grade
+          in: query
+          schema:
+            type: string
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Page of CBC titles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CbcTitlePage"
+
   /listings:
     get:
       tags: [Listings]
@@ -253,6 +296,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListingPage"
+    post:
+      tags: [Listings]
+      operationId: createListing
+      summary: Publish a listing (instant Active; phone verified required)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateListingRequest"
+      responses:
+        "201":
+          description: Created listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
 
   /listings/{id}:
     get:
@@ -274,6 +342,509 @@ paths:
               schema:
                 $ref: "#/components/schemas/ListingDetail"
         "404":
+          $ref: "#/components/responses/Problem"
+    patch:
+      tags: [Listings]
+      operationId: updateListing
+      summary: Update own editable listing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateListingRequest"
+      responses:
+        "200":
+          description: Updated listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /listings/{id}/pause:
+    post:
+      tags: [Listings]
+      operationId: pauseListing
+      summary: Pause own active listing (hides from browse)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Paused listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /listings/{id}/resume:
+    post:
+      tags: [Listings]
+      operationId: resumeListing
+      summary: Resume own paused listing to Active
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Resumed listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /me/listings:
+    get:
+      tags: [Listings]
+      operationId: listMyListings
+      summary: Listings owned by the current user (all statuses)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Page of own listings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingPage"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /me/listings/{id}:
+    get:
+      tags: [Listings]
+      operationId: getMyListing
+      summary: Own listing detail for edit (includes paused)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Own listing detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingDetail"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /media/image-stub:
+    post:
+      tags: [Listings]
+      operationId: createImageStub
+      summary: Return a placeholder cover image URL (MinIO later)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageStubRequest"
+      responses:
+        "200":
+          description: Stub URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageStubResponse"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /listings/{listingId}/interests:
+    post:
+      tags: [Deals]
+      operationId: createInterest
+      summary: Send arrange/interest request (phone verified; listing stays Active)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterestRequest"
+      responses:
+        "201":
+          description: Interest created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+
+  /me/interests:
+    get:
+      tags: [Deals]
+      operationId: listMyInterests
+      summary: Buyer interest inbox
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Page of interests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestPage"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /me/listings/{listingId}/interests:
+    get:
+      tags: [Deals]
+      operationId: listListingInterests
+      summary: Seller inbox of interests for one listing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Page of interests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestPage"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /interests/{id}:
+    get:
+      tags: [Deals]
+      operationId: getInterest
+      summary: Interest/deal detail (phones only when Accepted)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Interest detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /interests/{id}/accept:
+    post:
+      tags: [Deals]
+      operationId: acceptInterest
+      summary: Seller accepts one interest → listing reserved
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Accepted interest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+
+  /interests/{id}/decline:
+    post:
+      tags: [Deals]
+      operationId: declineInterest
+      summary: Seller declines an interest
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Declined interest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /interests/{id}/cancel:
+    post:
+      tags: [Deals]
+      operationId: cancelInterest
+      summary: Buyer cancels pending/waitlisted interest
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Cancelled interest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /interests/{id}/release:
+    post:
+      tags: [Deals]
+      operationId: releaseInterest
+      summary: Release accepted reserve → listing Active again
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Released interest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /interests/{id}/complete:
+    post:
+      tags: [Deals]
+      operationId: completeInterest
+      summary: Mark accepted deal complete (sold/given/exchanged)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Completed interest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /me/notifications:
+    get:
+      tags: [Notifications]
+      operationId: listMyNotifications
+      summary: In-app notification inbox
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Notifications page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPage"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /me/notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      operationId: markNotificationRead
+      summary: Mark one notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Marked read
+        "401":
           $ref: "#/components/responses/Problem"
 
 components:
@@ -581,4 +1152,286 @@ components:
         total_items:
           type: integer
         total_pages:
+          type: integer
+    CbcTitleCard:
+      type: object
+      required: [id, code, title, grade, subject, term, material_type, language]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        title:
+          type: string
+        grade:
+          type: string
+        subject:
+          type: string
+        term:
+          type: string
+        material_type:
+          type: string
+        language:
+          type: string
+    CbcTitlePage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CbcTitleCard"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    CreateListingRequest:
+      type: object
+      required:
+        [
+          title,
+          grade,
+          subject,
+          city,
+          intent,
+          condition,
+          description,
+          cover_image_url,
+        ]
+      properties:
+        cbc_title_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          maxLength: 200
+        grade:
+          type: string
+          maxLength: 40
+        subject:
+          type: string
+          maxLength: 80
+        term:
+          type: string
+          maxLength: 40
+          nullable: true
+        city:
+          type: string
+          maxLength: 80
+        intent:
+          $ref: "#/components/schemas/ListingIntent"
+        condition:
+          $ref: "#/components/schemas/BookCondition"
+        price_kes:
+          type: number
+          format: double
+          nullable: true
+          description: Required when intent is sale; must be null for free/exchange
+        description:
+          type: string
+          maxLength: 4000
+        cover_image_url:
+          type: string
+          maxLength: 500
+          description: Stub URL OK until MinIO upload lands
+    UpdateListingRequest:
+      allOf:
+        - $ref: "#/components/schemas/CreateListingRequest"
+    ImageStubRequest:
+      type: object
+      properties:
+        filename:
+          type: string
+          nullable: true
+    ImageStubResponse:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+    InterestStatus:
+      type: string
+      enum: [pending, accepted, waitlisted, declined, cancelled, completed]
+    HandoffMode:
+      type: string
+      enum: [meetup, pickup_mtaani]
+    CreateInterestRequest:
+      type: object
+      required: [handoff_mode, city]
+      properties:
+        handoff_mode:
+          $ref: "#/components/schemas/HandoffMode"
+        city:
+          type: string
+          maxLength: 80
+        message:
+          type: string
+          maxLength: 2000
+          nullable: true
+    PartySnippet:
+      type: object
+      required: [id, display_name, city]
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        city:
+          type: string
+        phone_e164:
+          type: string
+          nullable: true
+          description: Present only when interest status is accepted
+    InterestDetail:
+      type: object
+      required:
+        [
+          id,
+          listing_id,
+          listing_title,
+          listing_intent,
+          status,
+          handoff_mode,
+          city,
+          created_at_utc,
+          buyer,
+          seller,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        listing_id:
+          type: string
+          format: uuid
+        listing_title:
+          type: string
+        listing_intent:
+          $ref: "#/components/schemas/ListingIntent"
+        status:
+          $ref: "#/components/schemas/InterestStatus"
+        handoff_mode:
+          $ref: "#/components/schemas/HandoffMode"
+        city:
+          type: string
+        message:
+          type: string
+          nullable: true
+        created_at_utc:
+          type: string
+          format: date-time
+        accepted_at_utc:
+          type: string
+          format: date-time
+          nullable: true
+        reserved_until_utc:
+          type: string
+          format: date-time
+          nullable: true
+        buyer:
+          $ref: "#/components/schemas/PartySnippet"
+        seller:
+          $ref: "#/components/schemas/PartySnippet"
+    InterestCard:
+      type: object
+      required:
+        [
+          id,
+          listing_id,
+          listing_title,
+          status,
+          handoff_mode,
+          city,
+          buyer_display_name,
+          created_at_utc,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        listing_id:
+          type: string
+          format: uuid
+        listing_title:
+          type: string
+        status:
+          $ref: "#/components/schemas/InterestStatus"
+        handoff_mode:
+          $ref: "#/components/schemas/HandoffMode"
+        city:
+          type: string
+        buyer_display_name:
+          type: string
+        created_at_utc:
+          type: string
+          format: date-time
+        reserved_until_utc:
+          type: string
+          format: date-time
+          nullable: true
+    InterestPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterestCard"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    NotificationItem:
+      type: object
+      required: [id, type, title, body, created_at_utc]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        related_entity_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at_utc:
+          type: string
+          format: date-time
+        read_at_utc:
+          type: string
+          format: date-time
+          nullable: true
+    NotificationPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages, unread_count]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationItem"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+        unread_count:
           type: integer

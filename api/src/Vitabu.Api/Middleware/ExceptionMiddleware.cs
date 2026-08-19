@@ -38,6 +38,11 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
                 ux.ErrorCode,
                 ux.Message,
                 (IDictionary<string, string[]>?)null),
+            ForbiddenDomainException fx => (
+                (int)HttpStatusCode.Forbidden,
+                fx.ErrorCode,
+                fx.Message,
+                (IDictionary<string, string[]>?)null),
             NotFoundException nf => (
                 (int)HttpStatusCode.NotFound,
                 nf.ErrorCode,

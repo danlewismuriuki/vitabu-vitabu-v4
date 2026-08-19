@@ -34,6 +34,13 @@ public sealed class UnauthorizedDomainException : DomainException
     }
 }
 
+public sealed class ForbiddenDomainException : DomainException
+{
+    public ForbiddenDomainException(string errorCode, string message) : base(errorCode, message)
+    {
+    }
+}
+
 public sealed class ValidationException : DomainException
 {
     public ValidationException(string message, IDictionary<string, string[]> errors)

@@ -30,6 +30,9 @@ export default async function HomePage() {
           <Link href="/books" className="text-primary-700 hover:text-accent-600">
             Browse
           </Link>
+          <Link href="/sell" className="text-primary-700 hover:text-accent-600">
+            Sell
+          </Link>
           <Link href="/login" className="btn-secondary !px-4 !py-2 text-sm">
             Log in
           </Link>
@@ -52,8 +55,8 @@ export default async function HomePage() {
             <Link href="/books" className="btn-primary">
               Browse books
             </Link>
-            <Link href="/signup" className="btn-secondary">
-              Sign up
+            <Link href="/sell" className="btn-secondary">
+              Sell a book
             </Link>
           </div>
         </div>
