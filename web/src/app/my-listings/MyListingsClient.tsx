@@ -134,6 +134,13 @@ export default function MyListingsClient() {
                     >
                       Edit
                     </Link>
+                    <Link
+                      href={`/my-listings/${listing.id}/interests`}
+                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-primary-700 hover:bg-neutral-50"
+                    >
+                      Interests
+                      {listing.interest_count > 0 ? ` (${listing.interest_count})` : ""}
+                    </Link>
                     {listing.status === "active" ? (
                       <>
                         <Link

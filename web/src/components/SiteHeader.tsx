@@ -43,6 +43,16 @@ export function SiteHeader({ active }: { active?: "browse" | "sell" | "mine" }) 
           {link("/sell", "sell", "Sell")}
           {user ? link("/my-listings", "mine", "My listings") : null}
           {user ? (
+            <Link href="/my-interests" className="text-primary-700 hover:text-accent-600">
+              Interests
+            </Link>
+          ) : null}
+          {user ? (
+            <Link href="/notifications" className="text-primary-700 hover:text-accent-600">
+              Alerts
+            </Link>
+          ) : null}
+          {user ? (
             <>
               <span className="text-neutral-500">{user.display_name}</span>
               {!user.phone_verified ? (

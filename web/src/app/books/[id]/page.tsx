@@ -112,7 +112,7 @@ export default async function BookDetailPage({
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href={`/login?returnUrl=/arrange/${listing.id}`} className="btn-primary">
+          <Link href={`/arrange/${listing.id}`} className="btn-primary">
             Arrange / request
           </Link>
           <Link href="/books" className="btn-secondary">

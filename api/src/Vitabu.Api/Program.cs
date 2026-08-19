@@ -6,8 +6,10 @@ using Vitabu.Infrastructure;
 using Vitabu.Infrastructure.Persistence;
 using Vitabu.Infrastructure.Seed;
 using Vitabu.Modules.Catalog;
+using Vitabu.Modules.Deals;
 using Vitabu.Modules.Identity;
 using Vitabu.Modules.Listings;
+using Vitabu.Modules.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCatalogModule();
 builder.Services.AddListingsModule();
+builder.Services.AddNotificationsModule();
+builder.Services.AddDealsModule();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -60,6 +64,8 @@ app.MapGet("/health", () => Results.Ok(new
 app.MapIdentityEndpoints();
 app.MapCatalogEndpoints();
 app.MapListingsEndpoints();
+app.MapDealsEndpoints();
+app.MapNotificationsEndpoints();
 
 app.Run();
 
