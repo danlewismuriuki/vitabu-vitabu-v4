@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Modules\Vitabu.Modules.Notifications\Vitabu.Modules.Notifications.csproj" />
     <ProjectReference Include="..\Modules\Vitabu.Modules.Admin\Vitabu.Modules.Admin.csproj" />
     <ProjectReference Include="..\Modules\Vitabu.Modules.Wishlist\Vitabu.Modules.Wishlist.csproj" />
+    <ProjectReference Include="..\Modules\Vitabu.Modules.Messaging\Vitabu.Modules.Messaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

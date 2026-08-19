@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { WishlistButton } from "@/components/WishlistButton";
+import { MessageSellerButton } from "@/components/MessageSellerButton";
 
 type ListingDetail = {
   id: string;
@@ -119,6 +120,7 @@ export default async function BookDetailPage({
           <Link href={`/arrange/${listing.id}`} className="btn-primary">
             Arrange / request
           </Link>
+          <MessageSellerButton listingId={listing.id} />
           <WishlistButton listingId={listing.id} />
           <Link href="/books" className="btn-secondary">
             Keep browsing
