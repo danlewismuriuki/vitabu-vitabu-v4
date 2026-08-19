@@ -457,6 +457,7 @@ public sealed class DealsService(
                 ListingIntent.Sale => ListingStatus.Sold,
                 ListingIntent.Free => ListingStatus.Given,
                 ListingIntent.Exchange => ListingStatus.Exchanged,
+                ListingIntent.DonateSchool => ListingStatus.Donated,
                 _ => ListingStatus.Sold
             };
             listing.UpdatedAtUtc = now;

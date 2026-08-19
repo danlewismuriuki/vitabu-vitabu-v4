@@ -30,6 +30,9 @@ export default async function HomePage() {
           <Link href="/books" className="text-primary-700 hover:text-accent-600">
             Browse
           </Link>
+          <Link href="/donate" className="text-primary-700 hover:text-accent-600">
+            Donate
+          </Link>
           <Link href="/sell" className="text-primary-700 hover:text-accent-600">
             Sell
           </Link>
@@ -48,12 +51,15 @@ export default async function HomePage() {
             Real Parents. Real Savings. Real Books.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-neutral-600">
-            Circulate CBC schoolbooks with other parents — sell, give free, or
-            exchange. Meet nearby or use Pickup Mtaani.
+            Circulate CBC schoolbooks with other parents — sell, give free,
+            exchange, or donate to schools. Meet nearby or use Pickup Mtaani.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/books" className="btn-primary">
               Browse books
+            </Link>
+            <Link href="/donate" className="btn-secondary">
+              Donate hub
             </Link>
             <Link href="/sell" className="btn-secondary">
               Sell a book

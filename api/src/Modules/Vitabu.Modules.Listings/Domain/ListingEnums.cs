@@ -4,7 +4,8 @@ public enum ListingIntent
 {
     Sale,
     Free,
-    Exchange
+    Exchange,
+    DonateSchool
 }
 
 public enum BookCondition
@@ -23,6 +24,7 @@ public enum ListingStatus
     Sold,
     Given,
     Exchanged,
+    Donated,
     Paused,
     Hidden
 }

@@ -7,7 +7,7 @@ import { getStoredUser, clearSession } from "@/lib/auth-storage";
 export function SiteHeader({
   active,
 }: {
-  active?: "browse" | "sell" | "mine" | "wishlist";
+  active?: "browse" | "sell" | "mine" | "wishlist" | "donate";
 }) {
   const [user, setUser] = useState<{ display_name: string; phone_verified: boolean } | null>(
     null
@@ -44,6 +44,7 @@ export function SiteHeader({
         </Link>
         <nav className="flex flex-wrap items-center gap-4 text-sm">
           {link("/books", "browse", "Browse")}
+          {link("/donate", "donate", "Donate")}
           {link("/sell", "sell", "Sell")}
           {user ? link("/my-listings", "mine", "My listings") : null}
           {user ? link("/wishlist", "wishlist", "Wishlist") : null}

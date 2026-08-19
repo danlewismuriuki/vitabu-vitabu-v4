@@ -263,7 +263,7 @@ public sealed class ListingsWriteService(
     private static void EnsureEditable(Listing listing)
     {
         if (listing.Status is ListingStatus.Sold or ListingStatus.Given or ListingStatus.Exchanged
-            or ListingStatus.Reserved or ListingStatus.Hidden)
+            or ListingStatus.Donated or ListingStatus.Reserved or ListingStatus.Hidden)
         {
             throw new DomainException(
                 "listing_not_editable",

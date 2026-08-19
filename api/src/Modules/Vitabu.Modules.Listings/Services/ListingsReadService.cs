@@ -132,7 +132,7 @@ public sealed class ListingsReadService(
             grades,
             subjects,
             cities,
-            ["sale", "free", "exchange"],
+            ["sale", "free", "exchange", "donate_school"],
             ["like_new", "good", "fair", "writing_inside"]);
     }
 }

@@ -22,8 +22,8 @@ public sealed class CreateListingRequestValidator : AbstractValidator<CreateList
             .WithMessage("Sale listings require a price in KES.");
         RuleFor(x => x.PriceKes)
             .Null()
-            .When(x => x.Intent is ListingIntent.Free or ListingIntent.Exchange)
-            .WithMessage("Free and exchange listings must not include a price.");
+            .When(x => x.Intent is ListingIntent.Free or ListingIntent.Exchange or ListingIntent.DonateSchool)
+            .WithMessage("Free, exchange, and donate_school listings must not include a price.");
     }
 }
 
@@ -45,7 +45,7 @@ public sealed class UpdateListingRequestValidator : AbstractValidator<UpdateList
             .WithMessage("Sale listings require a price in KES.");
         RuleFor(x => x.PriceKes)
             .Null()
-            .When(x => x.Intent is ListingIntent.Free or ListingIntent.Exchange)
-            .WithMessage("Free and exchange listings must not include a price.");
+            .When(x => x.Intent is ListingIntent.Free or ListingIntent.Exchange or ListingIntent.DonateSchool)
+            .WithMessage("Free, exchange, and donate_school listings must not include a price.");
     }
 }

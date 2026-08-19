@@ -40,7 +40,7 @@ async function loadFacets() {
 export const metadata = {
   title: "Browse CBC books | Vitabu Vitabu",
   description:
-    "Find used CBC schoolbooks across Kenya — sale, free giveaways, and exchanges.",
+    "Find used CBC schoolbooks across Kenya — sale, free, exchange, and school donate.",
 };
 
 export default async function BooksPage({
@@ -80,6 +80,9 @@ export default async function BooksPage({
             Vitabu Vitabu
           </Link>
           <nav className="flex gap-3 text-sm">
+            <Link href="/donate" className="text-primary-700 hover:text-accent-600">
+              Donate
+            </Link>
             <Link href="/sell" className="text-primary-700 hover:text-accent-600">
               Sell
             </Link>
@@ -96,7 +99,7 @@ export default async function BooksPage({
       <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="font-poppins text-3xl font-bold text-primary-800">Browse books</h1>
         <p className="mt-2 text-neutral-600">
-          Active CBC listings — sale, free, and exchange mixed together.
+          Active CBC listings — sale, free, exchange, and school donate.
         </p>
 
         <form className="mt-6 grid gap-3 rounded-xl bg-white p-4 shadow-md md:grid-cols-6">
@@ -143,6 +146,7 @@ export default async function BooksPage({
             <option value="sale">For sale</option>
             <option value="free">Free</option>
             <option value="exchange">Exchange</option>
+            <option value="donate_school">Donate school</option>
           </select>
           <button type="submit" className="btn-primary md:col-span-6 md:w-fit">
             Apply filters
