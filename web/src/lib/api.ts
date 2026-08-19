@@ -17,6 +17,7 @@ export type UserProfile = {
   email_verified: boolean;
   is_staff: boolean;
   created_at_utc: string;
+  wishlist_alerts_enabled: boolean;
 };
 
 export type AuthResponse = {

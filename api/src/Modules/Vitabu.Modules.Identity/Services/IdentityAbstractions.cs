@@ -22,6 +22,10 @@ public interface IIdentityService
     Task<Contracts.AuthResponse> RegisterAsync(Contracts.RegisterRequest request, CancellationToken ct = default);
     Task<Contracts.AuthResponse> LoginAsync(Contracts.LoginRequest request, CancellationToken ct = default);
     Task<Contracts.UserProfile> GetMeAsync(Guid userId, CancellationToken ct = default);
+    Task<Contracts.UserProfile> UpdateNotificationPrefsAsync(
+        Guid userId,
+        Contracts.UpdateNotificationPrefsRequest request,
+        CancellationToken ct = default);
     Task<Contracts.MessageResponse> ForgotPasswordAsync(Contracts.ForgotPasswordRequest request, CancellationToken ct = default);
     Task<Contracts.MessageResponse> ResetPasswordAsync(Contracts.ResetPasswordRequest request, CancellationToken ct = default);
     Task<Contracts.RequestPhoneOtpResponse> RequestPhoneOtpAsync(Guid userId, Contracts.RequestPhoneOtpRequest request, CancellationToken ct = default);

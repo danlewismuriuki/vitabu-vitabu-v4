@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Vitabu.Core.Abstractions;
 using Vitabu.Core.Exceptions;
 using Vitabu.Modules.Wishlist.Services;
 
@@ -90,6 +91,7 @@ public static class WishlistDependencyInjection
     public static IServiceCollection AddWishlistModule(this IServiceCollection services)
     {
         services.AddScoped<IWishlistService, WishlistService>();
+        services.AddScoped<IWishlistAlertService, WishlistAlertService>();
         return services;
     }
 }

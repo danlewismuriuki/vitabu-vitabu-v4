@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Vitabu.Core.Abstractions;
 using Vitabu.Core.Exceptions;
 using Vitabu.Modules.Deals.Contracts;
 using Vitabu.Modules.Deals.Domain;
@@ -34,7 +35,8 @@ public sealed class DealsService(
     IListingsDbContext listingsDb,
     IIdentityDbContext identityDb,
     INotificationService notifications,
-    IPickupMtaaniClient mtaani) : IDealsService
+    IPickupMtaaniClient mtaani,
+    IWishlistAlertService wishlistAlerts) : IDealsService
 {
     private static readonly TimeSpan ReserveWindow = TimeSpan.FromHours(72);
 
@@ -264,6 +266,12 @@ public sealed class DealsService(
 
         await dealsDb.SaveChangesAsync(ct);
         await listingsDb.SaveChangesAsync(ct);
+
+        await wishlistAlerts.NotifyWishlistedListingUnavailableAsync(
+            listing.Id,
+            listing.Title,
+            "reserved with another parent",
+            ct);
 
         await notifications.NotifyAsync(
             interest.BuyerUserId,

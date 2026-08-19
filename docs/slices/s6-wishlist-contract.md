@@ -8,8 +8,8 @@
 - No phone verification required to wishlist (browse + save OK unverified)
 
 ## IS NOT
-- Email grade/subject alerts / marketing leads
-- Auto-match job when matching listings appear
+- Email grade/subject alerts / marketing digests (see S11)
+- Auto-match job when matching listings appear (see S11 in-process alerts)
 - Public wishlists
 - donate_school
 
