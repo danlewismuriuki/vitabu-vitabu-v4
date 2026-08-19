@@ -26,6 +26,24 @@ public static class CatalogEndpoints
         .WithName("searchCatalogTitles")
         .WithTags("Catalog");
 
+        app.MapGet("/schools", async (
+            string? city,
+            int? page,
+            int? page_size,
+            ICatalogReadService catalog,
+            CancellationToken ct) =>
+            Results.Ok(await catalog.ListSchoolsAsync(city, page ?? 1, page_size ?? 50, ct)))
+        .WithName("listSchools")
+        .WithTags("Schools");
+
+        app.MapGet("/schools/{id:guid}", async (
+            Guid id,
+            ICatalogReadService catalog,
+            CancellationToken ct) =>
+            Results.Ok(await catalog.GetSchoolAsync(id, ct)))
+        .WithName("getSchool")
+        .WithTags("Schools");
+
         return app;
     }
 }
@@ -35,6 +53,7 @@ public static class CatalogDependencyInjection
     public static IServiceCollection AddCatalogModule(this IServiceCollection services)
     {
         services.AddScoped<ICatalogReadService, CatalogReadService>();
+        services.AddScoped<ISchoolWriteService, SchoolWriteService>();
         return services;
     }
 }

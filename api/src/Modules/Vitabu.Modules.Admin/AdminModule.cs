@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Vitabu.Core.Exceptions;
 using Vitabu.Modules.Admin.Contracts;
 using Vitabu.Modules.Admin.Services;
+using Vitabu.Modules.Catalog.Contracts;
+using Vitabu.Modules.Catalog.Services;
 
 namespace Vitabu.Modules.Admin;
 
@@ -64,6 +66,19 @@ public static class AdminEndpoints
             await admin.ResolveReportAsync(userId, id, request, ct);
             return Results.NoContent();
         }).WithName("adminResolveReport");
+
+        group.MapPost("/schools", async (
+            CreateSchoolRequest request,
+            ClaimsPrincipal principal,
+            IAdminService admin,
+            ISchoolWriteService schools,
+            CancellationToken ct) =>
+        {
+            var userId = RequireUserId(principal);
+            await admin.EnsureStaffAsync(userId, ct);
+            var created = await schools.CreateAsync(request, ct);
+            return Results.Created($"/schools/{created.Id}", created);
+        }).WithName("adminCreateSchool");
 
         return app;
     }

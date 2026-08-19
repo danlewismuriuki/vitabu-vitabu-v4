@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.9.0
+  version: 1.0.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
@@ -26,8 +26,10 @@ tags:
     description: Save listings for later
   - name: Messaging
     description: 1:1 parent–seller threads per listing
+  - name: Schools
+    description: Verified school directory for donate_school listings
   - name: Admin
-    description: Staff moderation (hide listings, resolve reports)
+    description: Staff moderation (hide listings, resolve reports, create schools)
 paths:
   /health:
     get:
@@ -282,6 +284,11 @@ paths:
           in: query
           schema:
             $ref: "#/components/schemas/BookCondition"
+        - name: school_id
+          in: query
+          schema:
+            type: string
+            format: uuid
         - name: page
           in: query
           schema:
@@ -1038,6 +1045,86 @@ paths:
         "404":
           $ref: "#/components/responses/Problem"
 
+  /schools:
+    get:
+      tags: [Schools]
+      operationId: listSchools
+      summary: List verified schools
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 50
+      responses:
+        "200":
+          description: Schools page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolPage"
+
+  /schools/{id}:
+    get:
+      tags: [Schools]
+      operationId: getSchool
+      summary: School profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: School
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolDetail"
+        "404":
+          $ref: "#/components/responses/Problem"
+
+  /admin/schools:
+    post:
+      tags: [Admin]
+      operationId: adminCreateSchool
+      summary: Staff create a verified school
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSchoolRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+
   /me/notifications:
     get:
       tags: [Notifications]
@@ -1593,6 +1680,13 @@ components:
         created_at_utc:
           type: string
           format: date-time
+        school_id:
+          type: string
+          format: uuid
+          nullable: true
+        school_name:
+          type: string
+          nullable: true
     ListingDetail:
       allOf:
         - $ref: "#/components/schemas/ListingCard"
@@ -1605,6 +1699,9 @@ components:
               type: string
             seller:
               $ref: "#/components/schemas/SellerSnippet"
+            school:
+              $ref: "#/components/schemas/SchoolSnippet"
+              nullable: true
     ListingPage:
       type: object
       required: [items, page, page_size, total_items, total_pages]
@@ -1708,6 +1805,11 @@ components:
           type: string
           maxLength: 500
           description: Stub URL OK until MinIO upload lands
+        school_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional; only for donate_school intent
     UpdateListingRequest:
       allOf:
         - $ref: "#/components/schemas/CreateListingRequest"
@@ -2069,3 +2171,96 @@ components:
           type: integer
         total_pages:
           type: integer
+    SchoolSnippet:
+      type: object
+      required: [id, name, city]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        city:
+          type: string
+    SchoolCard:
+      type: object
+      required: [id, name, city, is_verified]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        city:
+          type: string
+        contact_name:
+          type: string
+          nullable: true
+        is_verified:
+          type: boolean
+    SchoolDetail:
+      type: object
+      required: [id, name, city, is_verified, created_at_utc]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        city:
+          type: string
+        contact_name:
+          type: string
+          nullable: true
+        contact_phone_e164:
+          type: string
+          nullable: true
+        contact_email:
+          type: string
+          nullable: true
+        is_verified:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+        created_at_utc:
+          type: string
+          format: date-time
+    SchoolPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SchoolCard"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    CreateSchoolRequest:
+      type: object
+      required: [name, city]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        city:
+          type: string
+          maxLength: 80
+        contact_name:
+          type: string
+          nullable: true
+        contact_phone_e164:
+          type: string
+          nullable: true
+        contact_email:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true

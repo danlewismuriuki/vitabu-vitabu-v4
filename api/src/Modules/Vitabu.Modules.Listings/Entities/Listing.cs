@@ -7,6 +7,7 @@ public sealed class Listing
     public Guid Id { get; set; }
     public Guid SellerUserId { get; set; }
     public Guid? CbcTitleId { get; set; }
+    public Guid? SchoolId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Grade { get; set; } = string.Empty;
     public string Subject { get; set; } = string.Empty;

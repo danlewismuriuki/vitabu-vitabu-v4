@@ -24,6 +24,10 @@ public sealed class CreateListingRequestValidator : AbstractValidator<CreateList
             .Null()
             .When(x => x.Intent is ListingIntent.Free or ListingIntent.Exchange or ListingIntent.DonateSchool)
             .WithMessage("Free, exchange, and donate_school listings must not include a price.");
+        RuleFor(x => x.SchoolId)
+            .Null()
+            .When(x => x.Intent != ListingIntent.DonateSchool)
+            .WithMessage("school_id is only allowed for donate_school listings.");
     }
 }
 
@@ -47,5 +51,9 @@ public sealed class UpdateListingRequestValidator : AbstractValidator<UpdateList
             .Null()
             .When(x => x.Intent is ListingIntent.Free or ListingIntent.Exchange or ListingIntent.DonateSchool)
             .WithMessage("Free, exchange, and donate_school listings must not include a price.");
+        RuleFor(x => x.SchoolId)
+            .Null()
+            .When(x => x.Intent != ListingIntent.DonateSchool)
+            .WithMessage("school_id is only allowed for donate_school listings.");
     }
 }

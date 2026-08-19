@@ -19,6 +19,8 @@ type CbcTitle = {
 
 type TitlePage = { items: CbcTitle[] };
 
+type SchoolCard = { id: string; name: string; city: string };
+
 const CONDITIONS = [
   { value: "like_new", label: "Like new" },
   { value: "good", label: "Good" },
@@ -43,6 +45,8 @@ export default function SellPage() {
   const [priceKes, setPriceKes] = useState("350");
   const [description, setDescription] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [schoolId, setSchoolId] = useState("");
+  const [schools, setSchools] = useState<SchoolCard[]>([]);
 
   useEffect(() => {
     const token = getToken();
@@ -56,6 +60,14 @@ export default function SellPage() {
       return;
     }
     if (user?.city) setCity(user.city);
+    (async () => {
+      try {
+        const page = await apiFetch<{ items: SchoolCard[] }>("/schools?page_size=50");
+        setSchools(page.items);
+      } catch {
+        setSchools([]);
+      }
+    })();
   }, [router]);
 
   useEffect(() => {
@@ -80,7 +92,7 @@ export default function SellPage() {
     if (intent === "sale") return "Set a fair KES price parents will notice.";
     if (intent === "free") return "Giveaway — no price. First interested parent wins.";
     if (intent === "donate_school")
-      return "Donate to a school — no price. Note the school or drive in the description.";
+      return "Donate to a school — no price. Optionally pick a school below.";
     return "Exchange — describe what you’d like in return in the notes.";
   }, [intent]);
 
@@ -130,6 +142,11 @@ export default function SellPage() {
         body.price_kes = Number(priceKes);
       } else {
         body.price_kes = null;
+      }
+      if (intent === "donate_school" && schoolId) {
+        body.school_id = schoolId;
+      } else {
+        body.school_id = null;
       }
 
       const created = await apiFetch<{ id: string }>("/listings", {
@@ -292,6 +309,27 @@ export default function SellPage() {
               </div>
               <p className="mt-2 text-xs text-neutral-500">{intentHint}</p>
             </div>
+
+            {intent === "donate_school" ? (
+              <div>
+                <label className={labelClass} htmlFor="school">
+                  Target school (optional)
+                </label>
+                <select
+                  id="school"
+                  className={fieldClass}
+                  value={schoolId}
+                  onChange={(e) => setSchoolId(e.target.value)}
+                >
+                  <option value="">Open donate — any school</option>
+                  {schools.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} · {s.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
             {intent === "sale" ? (
               <div>

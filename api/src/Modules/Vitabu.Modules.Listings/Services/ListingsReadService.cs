@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Vitabu.Core.Exceptions;
-using Vitabu.Modules.Identity.Entities;
+using Vitabu.Modules.Catalog.Persistence;
 using Vitabu.Modules.Identity.Persistence;
 using Vitabu.Modules.Listings.Contracts;
 using Vitabu.Modules.Listings.Domain;
-using Vitabu.Modules.Listings.Entities;
 using Vitabu.Modules.Listings.Persistence;
 
 namespace Vitabu.Modules.Listings.Services;
@@ -18,7 +17,8 @@ public interface IListingsReadService
 
 public sealed class ListingsReadService(
     IListingsDbContext listingsDb,
-    IIdentityDbContext identityDb) : IListingsReadService
+    IIdentityDbContext identityDb,
+    ICatalogDbContext catalogDb) : IListingsReadService
 {
     public async Task<ListingPage> ListAsync(ListListingsQuery query, CancellationToken ct = default)
     {
@@ -65,26 +65,41 @@ public sealed class ListingsReadService(
             q = q.Where(l => l.Condition == condition);
         }
 
+        if (query.SchoolId is { } schoolId)
+        {
+            q = q.Where(l => l.SchoolId == schoolId);
+        }
+
         var total = await q.CountAsync(ct);
-        var items = await q
+        var rows = await q
             .OrderByDescending(l => l.CreatedAtUtc)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(l => new ListingCard(
-                l.Id,
-                l.Title,
-                l.Grade,
-                l.Subject,
-                l.Term,
-                l.City,
-                l.Intent,
-                l.Condition,
-                l.Status,
-                l.PriceKes,
-                l.CoverImageUrl,
-                l.InterestCount,
-                l.CreatedAtUtc))
             .ToListAsync(ct);
+
+        var schoolIds = rows.Where(l => l.SchoolId is not null).Select(l => l.SchoolId!.Value).Distinct().ToList();
+        var schools = schoolIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await catalogDb.Schools.AsNoTracking()
+                .Where(s => schoolIds.Contains(s.Id))
+                .ToDictionaryAsync(s => s.Id, s => s.Name, ct);
+
+        var items = rows.Select(l => new ListingCard(
+            l.Id,
+            l.Title,
+            l.Grade,
+            l.Subject,
+            l.Term,
+            l.City,
+            l.Intent,
+            l.Condition,
+            l.Status,
+            l.PriceKes,
+            l.CoverImageUrl,
+            l.InterestCount,
+            l.CreatedAtUtc,
+            l.SchoolId,
+            l.SchoolId is { } sid && schools.TryGetValue(sid, out var name) ? name : null)).ToList();
 
         var totalPages = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
         return new ListingPage(items, page, pageSize, total, totalPages);
@@ -102,6 +117,15 @@ public sealed class ListingsReadService(
             .FirstOrDefaultAsync(ct)
             ?? new SellerSnippet("Vitabu parent", listing.City);
 
+        SchoolSnippet? school = null;
+        if (listing.SchoolId is { } schoolId)
+        {
+            school = await catalogDb.Schools.AsNoTracking()
+                .Where(s => s.Id == schoolId)
+                .Select(s => new SchoolSnippet(s.Id, s.Name, s.City))
+                .FirstOrDefaultAsync(ct);
+        }
+
         return new ListingDetail(
             listing.Id,
             listing.Title,
@@ -118,7 +142,8 @@ public sealed class ListingsReadService(
             listing.CreatedAtUtc,
             listing.Description,
             listing.Slug,
-            seller);
+            seller,
+            school);
     }
 
     public async Task<CatalogFacets> GetFacetsAsync(CancellationToken ct = default)

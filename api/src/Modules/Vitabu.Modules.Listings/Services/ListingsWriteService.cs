@@ -32,6 +32,7 @@ public sealed class ListingsWriteService(
     {
         var seller = await RequirePhoneVerifiedSellerAsync(sellerUserId, ct);
         var fields = await ResolveFieldsAsync(request.CbcTitleId, request, ct);
+        var school = await ResolveSchoolAsync(request.Intent, request.SchoolId, ct);
         var now = DateTime.UtcNow;
         var id = Guid.NewGuid();
         var listing = new Listing
@@ -39,6 +40,7 @@ public sealed class ListingsWriteService(
             Id = id,
             SellerUserId = sellerUserId,
             CbcTitleId = fields.CbcTitleId,
+            SchoolId = school?.Id,
             Title = fields.Title,
             Grade = fields.Grade,
             Subject = fields.Subject,
@@ -58,7 +60,7 @@ public sealed class ListingsWriteService(
 
         listingsDb.Listings.Add(listing);
         await listingsDb.SaveChangesAsync(ct);
-        return ToDetail(listing, seller.DisplayName, listing.City);
+        return ToDetail(listing, seller.DisplayName, listing.City, school);
     }
 
     public async Task<ListingPage> ListMineAsync(
@@ -106,7 +108,7 @@ public sealed class ListingsWriteService(
             .FirstOrDefaultAsync(l => l.Id == listingId && l.SellerUserId == sellerUserId, ct)
             ?? throw NotFoundException.For("listing", listingId);
 
-        return ToDetail(listing, seller.DisplayName, listing.City);
+        return await ToDetailAsync(listing, seller.DisplayName, listing.City, ct);
     }
 
     public async Task<ListingDetail> UpdateAsync(
@@ -135,10 +137,14 @@ public sealed class ListingsWriteService(
                 request.Condition,
                 request.PriceKes,
                 request.Description,
-                request.CoverImageUrl),
+                request.CoverImageUrl,
+                request.SchoolId),
             ct);
 
+        var school = await ResolveSchoolAsync(request.Intent, request.SchoolId, ct);
+
         listing.CbcTitleId = fields.CbcTitleId;
+        listing.SchoolId = school?.Id;
         listing.Title = fields.Title;
         listing.Grade = fields.Grade;
         listing.Subject = fields.Subject;
@@ -152,7 +158,7 @@ public sealed class ListingsWriteService(
         listing.UpdatedAtUtc = DateTime.UtcNow;
 
         await listingsDb.SaveChangesAsync(ct);
-        return ToDetail(listing, seller.DisplayName, listing.City);
+        return ToDetail(listing, seller.DisplayName, listing.City, school);
     }
 
     public async Task<ListingDetail> PauseAsync(Guid sellerUserId, Guid listingId, CancellationToken ct = default)
@@ -170,7 +176,7 @@ public sealed class ListingsWriteService(
         listing.Status = ListingStatus.Paused;
         listing.UpdatedAtUtc = DateTime.UtcNow;
         await listingsDb.SaveChangesAsync(ct);
-        return ToDetail(listing, seller.DisplayName, listing.City);
+        return await ToDetailAsync(listing, seller.DisplayName, listing.City, ct);
     }
 
     public async Task<ListingDetail> ResumeAsync(Guid sellerUserId, Guid listingId, CancellationToken ct = default)
@@ -188,7 +194,7 @@ public sealed class ListingsWriteService(
         listing.Status = ListingStatus.Active;
         listing.UpdatedAtUtc = DateTime.UtcNow;
         await listingsDb.SaveChangesAsync(ct);
-        return ToDetail(listing, seller.DisplayName, listing.City);
+        return await ToDetailAsync(listing, seller.DisplayName, listing.City, ct);
     }
 
     public ImageStubResponse CreateImageStub(ImageStubRequest request)
@@ -271,7 +277,55 @@ public sealed class ListingsWriteService(
         }
     }
 
-    private static ListingDetail ToDetail(Listing listing, string displayName, string city) =>
+    private async Task<SchoolSnippet?> ResolveSchoolAsync(
+        ListingIntent intent,
+        Guid? schoolId,
+        CancellationToken ct)
+    {
+        if (schoolId is null)
+        {
+            return null;
+        }
+
+        if (intent != ListingIntent.DonateSchool)
+        {
+            throw new ValidationException(
+                "school_id is only allowed for donate_school listings.",
+                new Dictionary<string, string[]> { ["school_id"] = ["Not allowed for this intent."] });
+        }
+
+        var school = await catalogDb.Schools.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == schoolId && s.IsVerified, ct)
+            ?? throw NotFoundException.For("school", schoolId);
+
+        return new SchoolSnippet(school.Id, school.Name, school.City);
+    }
+
+    private async Task<ListingDetail> ToDetailAsync(
+        Listing listing,
+        string displayName,
+        string city,
+        CancellationToken ct)
+    {
+        SchoolSnippet? school = null;
+        if (listing.SchoolId is { } schoolId)
+        {
+            var row = await catalogDb.Schools.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == schoolId, ct);
+            if (row is not null)
+            {
+                school = new SchoolSnippet(row.Id, row.Name, row.City);
+            }
+        }
+
+        return ToDetail(listing, displayName, city, school);
+    }
+
+    private static ListingDetail ToDetail(
+        Listing listing,
+        string displayName,
+        string city,
+        SchoolSnippet? school) =>
         new(
             listing.Id,
             listing.Title,
@@ -288,7 +342,8 @@ public sealed class ListingsWriteService(
             listing.CreatedAtUtc,
             listing.Description,
             listing.Slug,
-            new SellerSnippet(displayName, city));
+            new SellerSnippet(displayName, city),
+            school);
 
     private static string Slugify(string value)
     {

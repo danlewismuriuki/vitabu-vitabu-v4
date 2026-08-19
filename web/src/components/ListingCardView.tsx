@@ -16,6 +16,8 @@ export type ListingCard = {
   cover_image_url?: string | null;
   interest_count: number;
   created_at_utc: string;
+  school_id?: string | null;
+  school_name?: string | null;
 };
 
 const intentLabel: Record<string, string> = {
@@ -65,6 +67,9 @@ export function ListingCardView({ listing }: { listing: ListingCard }) {
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
         <span className="font-medium text-primary-700">{priceLabel(listing)}</span>
         <span className="text-neutral-500">{listing.city}</span>
+        {listing.school_name ? (
+          <span className="text-neutral-500">{listing.school_name}</span>
+        ) : null}
         {listing.interest_count > 0 ? (
           <span className="text-neutral-500">{listing.interest_count} interested</span>
         ) : null}

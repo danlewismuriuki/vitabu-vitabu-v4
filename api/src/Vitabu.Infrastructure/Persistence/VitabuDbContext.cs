@@ -24,6 +24,7 @@ public sealed class VitabuDbContext(DbContextOptions<VitabuDbContext> options)
     public DbSet<PhoneOtpChallenge> PhoneOtpChallenges => Set<PhoneOtpChallenge>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<CbcTitle> CbcTitles => Set<CbcTitle>();
+    public DbSet<School> Schools => Set<School>();
     public DbSet<Listing> Listings => Set<Listing>();
     public DbSet<DealInterest> DealInterests => Set<DealInterest>();
     public DbSet<DealRating> DealRatings => Set<DealRating>();

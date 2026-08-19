@@ -25,6 +25,14 @@ type ReportItem = {
   status: string;
 };
 
+type SchoolCard = {
+  id: string;
+  name: string;
+  city: string;
+  contact_name?: string | null;
+  is_verified: boolean;
+};
+
 export default function App() {
   const [token, setToken] = useState<string | null>(
     () => localStorage.getItem("vitabu_admin_token")
@@ -32,9 +40,13 @@ export default function App() {
   const [email, setEmail] = useState("admin@vitabu.local");
   const [password, setPassword] = useState("AdminPassword1!");
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"listings" | "reports">("listings");
+  const [tab, setTab] = useState<"listings" | "reports" | "schools">("listings");
   const [listings, setListings] = useState<ListingCard[]>([]);
   const [reports, setReports] = useState<ReportItem[]>([]);
+  const [schools, setSchools] = useState<SchoolCard[]>([]);
+  const [schoolName, setSchoolName] = useState("");
+  const [schoolCity, setSchoolCity] = useState("");
+  const [schoolContact, setSchoolContact] = useState("");
 
   async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     const res = await fetch(`${API}${path}`, {
@@ -78,9 +90,12 @@ export default function App() {
       if (tab === "listings") {
         const page = await api<{ items: ListingCard[] }>("/admin/listings?page_size=50");
         setListings(page.items);
-      } else {
+      } else if (tab === "reports") {
         const page = await api<{ items: ReportItem[] }>("/admin/reports?status=open&page_size=50");
         setReports(page.items);
+      } else {
+        const page = await api<{ items: SchoolCard[] }>("/schools?page_size=50");
+        setSchools(page.items);
       }
       setError(null);
     } catch (err) {
@@ -104,6 +119,27 @@ export default function App() {
       body: JSON.stringify({ action }),
     });
     await load();
+  }
+
+  async function createSchool(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api("/admin/schools", {
+        method: "POST",
+        body: JSON.stringify({
+          name: schoolName,
+          city: schoolCity,
+          contact_name: schoolContact || null,
+        }),
+      });
+      setSchoolName("");
+      setSchoolCity("");
+      setSchoolContact("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Create school failed");
+    }
   }
 
   if (!token) {
@@ -149,7 +185,7 @@ export default function App() {
             <p className="font-poppins text-xl font-bold text-primary-700">
               Vitabu Vitabu Admin
             </p>
-            <p className="text-sm text-neutral-500">Moderate listings & reports</p>
+            <p className="text-sm text-neutral-500">Moderate listings, reports & schools</p>
           </div>
           <button
             type="button"
@@ -164,29 +200,27 @@ export default function App() {
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <div className="mb-6 flex gap-3">
-          <button
-            type="button"
-            onClick={() => setTab("listings")}
-            className={
-              tab === "listings"
-                ? "rounded-lg bg-accent-500 px-4 py-2 text-white"
-                : "rounded-lg border border-neutral-300 px-4 py-2"
-            }
-          >
-            Listings
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("reports")}
-            className={
-              tab === "reports"
-                ? "rounded-lg bg-accent-500 px-4 py-2 text-white"
-                : "rounded-lg border border-neutral-300 px-4 py-2"
-            }
-          >
-            Reports
-          </button>
+        <div className="mb-6 flex flex-wrap gap-3">
+          {(
+            [
+              ["listings", "Listings"],
+              ["reports", "Reports"],
+              ["schools", "Schools"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={
+                tab === key
+                  ? "rounded-lg bg-accent-500 px-4 py-2 text-white"
+                  : "rounded-lg border border-neutral-300 px-4 py-2"
+              }
+            >
+              {label}
+            </button>
+          ))}
         </div>
         {error ? <p className="mb-4 text-sm text-accent-700">{error}</p> : null}
         {tab === "listings" ? (
@@ -213,7 +247,8 @@ export default function App() {
               </li>
             ))}
           </ul>
-        ) : (
+        ) : null}
+        {tab === "reports" ? (
           <ul className="space-y-3">
             {reports.map((r) => (
               <li key={r.id} className="rounded-xl bg-white p-4 shadow-md">
@@ -244,7 +279,62 @@ export default function App() {
               <p className="text-neutral-600">No open reports.</p>
             ) : null}
           </ul>
-        )}
+        ) : null}
+        {tab === "schools" ? (
+          <div className="space-y-6">
+            <form
+              onSubmit={createSchool}
+              className="rounded-xl bg-white p-4 shadow-md"
+            >
+              <h2 className="font-poppins text-lg font-semibold text-primary-800">
+                Add school
+              </h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <input
+                  required
+                  placeholder="Name"
+                  className="rounded-lg border border-neutral-300 px-3 py-2"
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value)}
+                />
+                <input
+                  required
+                  placeholder="City"
+                  className="rounded-lg border border-neutral-300 px-3 py-2"
+                  value={schoolCity}
+                  onChange={(e) => setSchoolCity(e.target.value)}
+                />
+                <input
+                  placeholder="Contact (optional)"
+                  className="rounded-lg border border-neutral-300 px-3 py-2"
+                  value={schoolContact}
+                  onChange={(e) => setSchoolContact(e.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                className="mt-4 rounded-lg bg-accent-500 px-4 py-2 text-white"
+              >
+                Create
+              </button>
+            </form>
+            <ul className="space-y-3">
+              {schools.map((s) => (
+                <li key={s.id} className="rounded-xl bg-white p-4 shadow-md">
+                  <p className="font-poppins font-semibold text-primary-800">{s.name}</p>
+                  <p className="text-sm text-neutral-500">
+                    {s.city}
+                    {s.contact_name ? ` · ${s.contact_name}` : ""}
+                    {s.is_verified ? " · verified" : ""}
+                  </p>
+                </li>
+              ))}
+              {schools.length === 0 ? (
+                <p className="text-neutral-600">No schools yet.</p>
+              ) : null}
+            </ul>
+          </div>
+        ) : null}
       </main>
     </div>
   );
