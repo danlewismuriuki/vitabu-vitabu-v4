@@ -28,6 +28,8 @@ tags:
     description: 1:1 parent–seller threads per listing
   - name: Schools
     description: Verified school directory for donate_school listings
+  - name: PickupMtaani
+    description: Pickup Mtaani partner facade (dev stub until ApiKey is set)
   - name: Admin
     description: Staff moderation (hide listings, resolve reports, create schools)
 paths:
@@ -1125,6 +1127,76 @@ paths:
         "403":
           $ref: "#/components/responses/Problem"
 
+  /mtaani/locations:
+    get:
+      tags: [PickupMtaani]
+      operationId: listMtaaniLocations
+      summary: List Pickup Mtaani locations (partner API or dev stub)
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MtaaniLocationCard"
+
+  /mtaani/agents:
+    get:
+      tags: [PickupMtaani]
+      operationId: listMtaaniAgents
+      summary: List Pickup Mtaani agents
+      parameters:
+        - name: location_id
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MtaaniAgentCard"
+
+  /mtaani/delivery-charge:
+    get:
+      tags: [PickupMtaani]
+      operationId: getMtaaniDeliveryCharge
+      summary: Estimated agent-to-agent delivery fee
+      parameters:
+        - name: sender_agent_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: receiver_agent_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Fee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MtaaniDeliveryChargeCard"
+        "404":
+          $ref: "#/components/responses/Problem"
+
   /me/notifications:
     get:
       tags: [Notifications]
@@ -1845,6 +1917,10 @@ components:
           type: string
           maxLength: 2000
           nullable: true
+        mtaani_agent_id:
+          type: integer
+          nullable: true
+          description: Required when handoff_mode is pickup_mtaani (Pickup Mtaani agent id)
     PartySnippet:
       type: object
       required: [id, display_name, city]
@@ -1921,6 +1997,9 @@ components:
           $ref: "#/components/schemas/PartySnippet"
         seller:
           $ref: "#/components/schemas/PartySnippet"
+        mtaani_agent:
+          $ref: "#/components/schemas/MtaaniAgentSnippet"
+          nullable: true
     InterestCard:
       type: object
       required:
@@ -1957,6 +2036,9 @@ components:
         reserved_until_utc:
           type: string
           format: date-time
+          nullable: true
+        mtaani_agent_name:
+          type: string
           nullable: true
     InterestPage:
       type: object
@@ -2264,3 +2346,56 @@ components:
         notes:
           type: string
           nullable: true
+    MtaaniLocationCard:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        zone_id:
+          type: integer
+          nullable: true
+    MtaaniAgentCard:
+      type: object
+      required: [id, business_name]
+      properties:
+        id:
+          type: integer
+        business_name:
+          type: string
+        location_id:
+          type: integer
+          nullable: true
+        location_name:
+          type: string
+          nullable: true
+        area:
+          type: string
+          nullable: true
+    MtaaniAgentSnippet:
+      type: object
+      required: [id, business_name]
+      properties:
+        id:
+          type: integer
+        business_name:
+          type: string
+        location_id:
+          type: integer
+          nullable: true
+        location_name:
+          type: string
+          nullable: true
+        estimated_fee_kes:
+          type: integer
+          nullable: true
+    MtaaniDeliveryChargeCard:
+      type: object
+      required: [amount_kes, currency]
+      properties:
+        amount_kes:
+          type: integer
+        currency:
+          type: string

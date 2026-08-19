@@ -23,10 +23,13 @@ public sealed class DealInterestConfiguration : IEntityTypeConfiguration<DealInt
         builder.Property(x => x.City).HasMaxLength(80).IsRequired();
         builder.Property(x => x.Message).HasMaxLength(2000);
         builder.Property(x => x.DisputeReason).HasMaxLength(500);
+        builder.Property(x => x.MtaaniAgentName).HasMaxLength(200);
+        builder.Property(x => x.MtaaniLocationName).HasMaxLength(200);
         builder.HasIndex(x => new { x.ListingId, x.BuyerUserId });
         builder.HasIndex(x => new { x.SellerUserId, x.Status });
         builder.HasIndex(x => new { x.BuyerUserId, x.Status });
         builder.HasIndex(x => x.ListingId);
+        builder.HasIndex(x => x.MtaaniAgentId);
     }
 }
 

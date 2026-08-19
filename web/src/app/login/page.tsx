@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { AuthShell, FormError, fieldClass, labelClass } from "@/components/AuthShell";
 import { ApiError, apiFetch, AuthResponse, fieldErrors } from "@/lib/api";
 import { saveSession } from "@/lib/auth-storage";
 
 function LoginForm() {
-  const router = useRouter();
   const search = useSearchParams();
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,8 +33,10 @@ function LoginForm() {
         phone_verified: data.user.phone_verified,
         phone_e164: data.user.phone_e164,
       });
-      const returnUrl = search.get("returnUrl") || "/";
-      router.push(returnUrl);
+      const raw = search.get("returnUrl") || "/";
+      const returnUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+      // Hard navigate so SiteHeader / client auth state remount with the new session.
+      window.location.assign(returnUrl);
     } catch (err) {
       if (err instanceof ApiError) setErrors(fieldErrors(err.problem));
       else setErrors(["Cannot reach the API. Is it running on :5080?"]);

@@ -107,5 +107,7 @@ jobs:
           grep -q "operationId: sendThreadMessage" contract/openapi.yaml
           grep -q "operationId: listSchools" contract/openapi.yaml
           grep -q "operationId: adminCreateSchool" contract/openapi.yaml
+          grep -q "operationId: listMtaaniLocations" contract/openapi.yaml
+          grep -q "operationId: listMtaaniAgents" contract/openapi.yaml
           grep -q "Problem:" contract/openapi.yaml
           grep -q "bearerAuth:" contract/openapi.yaml

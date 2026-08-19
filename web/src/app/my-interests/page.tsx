@@ -15,6 +15,7 @@ type InterestCard = {
   handoff_mode: string;
   city: string;
   created_at_utc: string;
+  mtaani_agent_name?: string | null;
 };
 
 type InterestPage = { items: InterestCard[] };
@@ -67,6 +68,7 @@ function MyInterestsClient() {
                   </h2>
                   <p className="mt-1 text-sm text-neutral-600">
                     {item.status} · {item.handoff_mode.replaceAll("_", " ")} · {item.city}
+                    {item.mtaani_agent_name ? ` · ${item.mtaani_agent_name}` : ""}
                   </p>
                 </div>
                 <Link

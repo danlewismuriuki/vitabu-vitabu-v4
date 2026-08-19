@@ -73,7 +73,7 @@ function VerifyPhoneForm() {
           phone_e164: user.phone_e164,
         });
       }
-      router.push(returnUrl.startsWith("/") ? returnUrl : "/");
+      window.location.assign(returnUrl.startsWith("/") && !returnUrl.startsWith("//") ? returnUrl : "/");
     } catch (err) {
       if (err instanceof ApiError) setErrors(fieldErrors(err.problem));
       else setErrors(["Could not verify code."]);

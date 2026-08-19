@@ -29,6 +29,13 @@ type InterestDetail = {
   dispute_reason?: string | null;
   buyer: Party;
   seller: Party;
+  mtaani_agent?: {
+    id: number;
+    business_name: string;
+    location_id?: number | null;
+    location_name?: string | null;
+    estimated_fee_kes?: number | null;
+  } | null;
 };
 
 export default function InterestDetailPage() {
@@ -124,6 +131,20 @@ export default function InterestDetailPage() {
             <p className="mt-2 text-sm uppercase tracking-wide text-neutral-500">
               {detail.status} · {detail.handoff_mode.replaceAll("_", " ")} · {detail.city}
             </p>
+            {detail.mtaani_agent ? (
+              <div className="mt-4 rounded-lg bg-primary-50 px-3 py-3 text-sm text-primary-800">
+                <p className="font-medium">{detail.mtaani_agent.business_name}</p>
+                <p className="text-neutral-600">
+                  Pickup Mtaani
+                  {detail.mtaani_agent.location_name
+                    ? ` · ${detail.mtaani_agent.location_name}`
+                    : ""}
+                  {detail.mtaani_agent.estimated_fee_kes != null
+                    ? ` · est. KES ${detail.mtaani_agent.estimated_fee_kes}`
+                    : ""}
+                </p>
+              </div>
+            ) : null}
             {detail.dispute_reason ? (
               <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm text-accent-700">
                 Dispute: {detail.dispute_reason}
