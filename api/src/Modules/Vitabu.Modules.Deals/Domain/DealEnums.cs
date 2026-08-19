@@ -7,7 +7,8 @@ public enum InterestStatus
     Waitlisted,
     Declined,
     Cancelled,
-    Completed
+    Completed,
+    Disputed
 }
 
 public enum HandoffMode

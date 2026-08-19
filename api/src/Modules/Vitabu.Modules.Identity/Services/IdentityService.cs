@@ -259,6 +259,7 @@ public sealed class IdentityService(
         user.PhoneVerifiedAtUtc != null,
         user.PhoneVerifiedAtUtc,
         user.EmailVerifiedAtUtc != null,
+        user.IsStaff,
         user.CreatedAtUtc);
 
     private static string NormalizeEmail(string email) => email.Trim().ToUpperInvariant();

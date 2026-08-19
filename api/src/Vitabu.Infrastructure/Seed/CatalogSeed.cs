@@ -87,6 +87,7 @@ public static class CatalogSeed
 
         if (await db.Listings.AnyAsync(ct))
         {
+            await EnsureAdminAsync(db, hasher, config, logger, ct);
             return;
         }
 
@@ -130,6 +131,52 @@ public static class CatalogSeed
 
         await db.SaveChangesAsync(ct);
         logger.LogInformation("Seeded {Count} demo listings", titles.Count);
+        await EnsureAdminAsync(db, hasher, config, logger, ct);
+    }
+
+    private static async Task EnsureAdminAsync(
+        VitabuDbContext db,
+        IPasswordHasher<User> hasher,
+        IConfiguration config,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var email = config["Seed:AdminEmail"] ?? "admin@vitabu.local";
+        var password = config["Seed:AdminPassword"] ?? "AdminPassword1!";
+        var normalized = email.Trim().ToUpperInvariant();
+        var admin = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized, ct);
+        if (admin is null)
+        {
+            var now = DateTime.UtcNow;
+            admin = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = email.Trim(),
+                NormalizedEmail = normalized,
+                DisplayName = "Vitabu Staff",
+                City = "Nairobi",
+                IsStaff = true,
+                PhoneVerifiedAtUtc = now,
+                PhoneE164 = "+254700000001",
+                AcceptedTermsAtUtc = now,
+                ConfirmedParentGuardian = true,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now
+            };
+            admin.PasswordHash = hasher.HashPassword(admin, password);
+            db.Users.Add(admin);
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("Seeded staff user {Email}", email);
+            return;
+        }
+
+        if (!admin.IsStaff)
+        {
+            admin.IsStaff = true;
+            admin.UpdatedAtUtc = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("Promoted {Email} to staff", email);
+        }
     }
 
     private static string ResolveCatalogPath(IConfiguration config, IHostEnvironment env)

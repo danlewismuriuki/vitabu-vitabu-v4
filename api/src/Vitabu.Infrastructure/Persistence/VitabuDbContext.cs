@@ -21,6 +21,8 @@ public sealed class VitabuDbContext(DbContextOptions<VitabuDbContext> options)
     public DbSet<CbcTitle> CbcTitles => Set<CbcTitle>();
     public DbSet<Listing> Listings => Set<Listing>();
     public DbSet<DealInterest> DealInterests => Set<DealInterest>();
+    public DbSet<DealRating> DealRatings => Set<DealRating>();
+    public DbSet<ListingReport> ListingReports => Set<ListingReport>();
     public DbSet<AppNotification> Notifications => Set<AppNotification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

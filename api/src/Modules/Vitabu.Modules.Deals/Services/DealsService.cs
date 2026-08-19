@@ -22,6 +22,10 @@ public interface IDealsService
     Task<InterestDetail> CancelAsync(Guid userId, Guid interestId, CancellationToken ct = default);
     Task<InterestDetail> ReleaseAsync(Guid userId, Guid interestId, CancellationToken ct = default);
     Task<InterestDetail> CompleteAsync(Guid userId, Guid interestId, CancellationToken ct = default);
+    Task<InterestDetail> DisputeAsync(Guid userId, Guid interestId, DisputeInterestRequest request, CancellationToken ct = default);
+    Task RateAsync(Guid userId, Guid interestId, RateInterestRequest request, CancellationToken ct = default);
+    Task ReportListingAsync(Guid userId, Guid listingId, ReportListingRequest request, CancellationToken ct = default);
+    Task ExpireIfNeededAsync(Guid interestId, CancellationToken ct = default);
 }
 
 public sealed class DealsService(
@@ -189,6 +193,8 @@ public sealed class DealsService(
 
     public async Task<InterestDetail> GetAsync(Guid userId, Guid interestId, CancellationToken ct = default)
     {
+        await ExpireIfNeededAsync(interestId, ct);
+
         var interest = await dealsDb.DealInterests.AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == interestId, ct)
             ?? throw NotFoundException.For("interest", interestId);
@@ -411,56 +417,242 @@ public sealed class DealsService(
             throw NotFoundException.For("interest", interestId);
         }
 
-        if (interest.Status != InterestStatus.Accepted)
+        if (interest.Status is not (InterestStatus.Accepted or InterestStatus.Disputed))
         {
-            throw new DomainException("interest_not_completable", "Only an accepted deal can be completed.");
+            throw new DomainException("interest_not_completable", "Only an accepted (or disputed) deal can be confirmed complete.");
         }
 
+        var now = DateTime.UtcNow;
+        if (userId == interest.BuyerUserId)
+        {
+            if (interest.BuyerCompletedAtUtc is not null)
+            {
+                throw new DomainException("already_confirmed", "You already confirmed completion.");
+            }
+
+            interest.BuyerCompletedAtUtc = now;
+        }
+        else
+        {
+            if (interest.SellerCompletedAtUtc is not null)
+            {
+                throw new DomainException("already_confirmed", "You already confirmed completion.");
+            }
+
+            interest.SellerCompletedAtUtc = now;
+        }
+
+        interest.UpdatedAtUtc = now;
+
+        var otherParty = userId == interest.BuyerUserId ? interest.SellerUserId : interest.BuyerUserId;
         var listing = await listingsDb.Listings
             .FirstOrDefaultAsync(l => l.Id == interest.ListingId, ct)
             ?? throw NotFoundException.For("listing", interest.ListingId);
 
-        var now = DateTime.UtcNow;
-        interest.Status = InterestStatus.Completed;
-        interest.UpdatedAtUtc = now;
-
-        listing.Status = listing.Intent switch
+        if (interest.BuyerCompletedAtUtc is not null && interest.SellerCompletedAtUtc is not null)
         {
-            ListingIntent.Sale => ListingStatus.Sold,
-            ListingIntent.Free => ListingStatus.Given,
-            ListingIntent.Exchange => ListingStatus.Exchanged,
-            _ => ListingStatus.Sold
-        };
-        listing.UpdatedAtUtc = now;
+            interest.Status = InterestStatus.Completed;
+            listing.Status = listing.Intent switch
+            {
+                ListingIntent.Sale => ListingStatus.Sold,
+                ListingIntent.Free => ListingStatus.Given,
+                ListingIntent.Exchange => ListingStatus.Exchanged,
+                _ => ListingStatus.Sold
+            };
+            listing.UpdatedAtUtc = now;
 
-        var leftover = await dealsDb.DealInterests
-            .Where(i =>
-                i.ListingId == listing.Id &&
-                i.Id != interest.Id &&
-                (i.Status == InterestStatus.Pending || i.Status == InterestStatus.Waitlisted))
-            .ToListAsync(ct);
-        foreach (var left in leftover)
+            var leftover = await dealsDb.DealInterests
+                .Where(i =>
+                    i.ListingId == listing.Id &&
+                    i.Id != interest.Id &&
+                    (i.Status == InterestStatus.Pending || i.Status == InterestStatus.Waitlisted))
+                .ToListAsync(ct);
+            foreach (var left in leftover)
+            {
+                left.Status = InterestStatus.Cancelled;
+                left.UpdatedAtUtc = now;
+            }
+
+            listing.InterestCount = 0;
+            await dealsDb.SaveChangesAsync(ct);
+            await listingsDb.SaveChangesAsync(ct);
+
+            await notifications.NotifyAsync(
+                otherParty,
+                "deal_completed",
+                "Deal completed",
+                $"Both of you confirmed “{listing.Title}”. You can rate each other now.",
+                interest.Id,
+                "Deal completed on Vitabu Vitabu",
+                $"“{listing.Title}” is complete. Asante — leave a rating if you can.",
+                ct);
+        }
+        else
         {
-            left.Status = InterestStatus.Cancelled;
-            left.UpdatedAtUtc = now;
+            await dealsDb.SaveChangesAsync(ct);
+            await notifications.NotifyAsync(
+                otherParty,
+                "deal_confirm_needed",
+                "Please confirm the handoff",
+                $"The other parent confirmed “{listing.Title}”. Confirm when you’ve finished the handoff.",
+                interest.Id,
+                "Confirm handoff on Vitabu Vitabu",
+                $"Please confirm completion for “{listing.Title}”.",
+                ct);
         }
 
-        listing.InterestCount = 0;
+        return await GetAsync(userId, interest.Id, ct);
+    }
+
+    public async Task<InterestDetail> DisputeAsync(
+        Guid userId,
+        Guid interestId,
+        DisputeInterestRequest request,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Reason))
+        {
+            throw new ValidationException("One or more validation errors occurred.",
+                new Dictionary<string, string[]> { ["reason"] = ["Reason is required."] });
+        }
+
+        var interest = await dealsDb.DealInterests
+            .FirstOrDefaultAsync(i => i.Id == interestId, ct)
+            ?? throw NotFoundException.For("interest", interestId);
+
+        if (interest.BuyerUserId != userId && interest.SellerUserId != userId)
+        {
+            throw NotFoundException.For("interest", interestId);
+        }
+
+        if (interest.Status is not (InterestStatus.Accepted or InterestStatus.Disputed))
+        {
+            throw new DomainException("interest_not_disputable", "Only accepted deals can be disputed.");
+        }
+
+        var now = DateTime.UtcNow;
+        interest.Status = InterestStatus.Disputed;
+        interest.DisputeReason = request.Reason.Trim();
+        interest.DisputedAtUtc = now;
+        interest.UpdatedAtUtc = now;
         await dealsDb.SaveChangesAsync(ct);
-        await listingsDb.SaveChangesAsync(ct);
 
         var otherParty = userId == interest.BuyerUserId ? interest.SellerUserId : interest.BuyerUserId;
         await notifications.NotifyAsync(
             otherParty,
-            "deal_completed",
-            "Deal completed",
-            $"“{listing.Title}” was marked complete.",
+            "deal_disputed",
+            "Deal disputed",
+            $"A dispute was opened: {interest.DisputeReason}",
             interest.Id,
-            "Deal completed on Vitabu Vitabu",
-            $"“{listing.Title}” was marked complete. Asante!",
+            "Deal disputed on Vitabu Vitabu",
+            $"A dispute was opened on your deal: {interest.DisputeReason}",
             ct);
 
         return await GetAsync(userId, interest.Id, ct);
+    }
+
+    public async Task RateAsync(
+        Guid userId,
+        Guid interestId,
+        RateInterestRequest request,
+        CancellationToken ct = default)
+    {
+        if (request.Stars is < 1 or > 5)
+        {
+            throw new ValidationException("One or more validation errors occurred.",
+                new Dictionary<string, string[]> { ["stars"] = ["Stars must be between 1 and 5."] });
+        }
+
+        var interest = await dealsDb.DealInterests.AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == interestId, ct)
+            ?? throw NotFoundException.For("interest", interestId);
+
+        if (interest.BuyerUserId != userId && interest.SellerUserId != userId)
+        {
+            throw NotFoundException.For("interest", interestId);
+        }
+
+        if (interest.Status != InterestStatus.Completed)
+        {
+            throw new DomainException("interest_not_rateable", "You can only rate after both parties complete the deal.");
+        }
+
+        var toUserId = userId == interest.BuyerUserId ? interest.SellerUserId : interest.BuyerUserId;
+        var exists = await dealsDb.DealRatings.AnyAsync(
+            r => r.InterestId == interestId && r.FromUserId == userId, ct);
+        if (exists)
+        {
+            throw new ConflictException("already_rated", "You already rated this deal.");
+        }
+
+        dealsDb.DealRatings.Add(new DealRating
+        {
+            Id = Guid.NewGuid(),
+            InterestId = interestId,
+            FromUserId = userId,
+            ToUserId = toUserId,
+            Stars = request.Stars,
+            Comment = string.IsNullOrWhiteSpace(request.Comment) ? null : request.Comment.Trim(),
+            CreatedAtUtc = DateTime.UtcNow
+        });
+        await dealsDb.SaveChangesAsync(ct);
+
+        await notifications.NotifyAsync(
+            toUserId,
+            "rating_received",
+            "You received a rating",
+            $"Someone rated you {request.Stars}/5 after a Vitabu handoff.",
+            interestId,
+            "New rating on Vitabu Vitabu",
+            $"You received a {request.Stars}/5 rating.",
+            ct);
+    }
+
+    public async Task ReportListingAsync(
+        Guid userId,
+        Guid listingId,
+        ReportListingRequest request,
+        CancellationToken ct = default)
+    {
+        await RequireUserAsync(userId, ct);
+        if (string.IsNullOrWhiteSpace(request.Reason))
+        {
+            throw new ValidationException("One or more validation errors occurred.",
+                new Dictionary<string, string[]> { ["reason"] = ["Reason is required."] });
+        }
+
+        var listing = await listingsDb.Listings.AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == listingId, ct)
+            ?? throw NotFoundException.For("listing", listingId);
+
+        dealsDb.ListingReports.Add(new ListingReport
+        {
+            Id = Guid.NewGuid(),
+            ListingId = listing.Id,
+            ReporterUserId = userId,
+            Reason = request.Reason.Trim(),
+            Details = string.IsNullOrWhiteSpace(request.Details) ? null : request.Details.Trim(),
+            Status = "open",
+            CreatedAtUtc = DateTime.UtcNow
+        });
+        await dealsDb.SaveChangesAsync(ct);
+    }
+
+    public async Task ExpireIfNeededAsync(Guid interestId, CancellationToken ct = default)
+    {
+        var interest = await dealsDb.DealInterests
+            .FirstOrDefaultAsync(i => i.Id == interestId, ct);
+        if (interest is null || interest.Status != InterestStatus.Accepted)
+        {
+            return;
+        }
+
+        if (interest.ReservedUntilUtc is null || interest.ReservedUntilUtc > DateTime.UtcNow)
+        {
+            return;
+        }
+
+        await ReleaseAsync(interest.SellerUserId, interest.Id, ct);
     }
 
     private async Task<int> CountOpenInterestsAsync(Guid listingId, CancellationToken ct) =>
@@ -493,7 +685,7 @@ public sealed class DealsService(
 
         var buyer = users.First(u => u.Id == interest.BuyerUserId);
         var seller = users.First(u => u.Id == interest.SellerUserId);
-        var unlock = interest.Status == InterestStatus.Accepted;
+        var unlock = interest.Status is InterestStatus.Accepted or InterestStatus.Disputed;
 
         return new InterestDetail(
             interest.Id,
@@ -507,6 +699,9 @@ public sealed class DealsService(
             interest.CreatedAtUtc,
             interest.AcceptedAtUtc,
             interest.ReservedUntilUtc,
+            interest.BuyerCompletedAtUtc,
+            interest.SellerCompletedAtUtc,
+            interest.DisputeReason,
             new PartySnippet(buyer.Id, buyer.DisplayName, buyer.City, unlock ? buyer.PhoneE164 : null),
             new PartySnippet(seller.Id, seller.DisplayName, seller.City, unlock ? seller.PhoneE164 : null));
     }

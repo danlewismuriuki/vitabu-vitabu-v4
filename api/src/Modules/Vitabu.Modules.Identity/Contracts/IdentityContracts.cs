@@ -27,6 +27,7 @@ public sealed record UserProfile(
     bool PhoneVerified,
     DateTime? PhoneVerifiedAtUtc,
     bool EmailVerified,
+    bool IsStaff,
     DateTime CreatedAtUtc);
 
 public sealed record AuthResponse(

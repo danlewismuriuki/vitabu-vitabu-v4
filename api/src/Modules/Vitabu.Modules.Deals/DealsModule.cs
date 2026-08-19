@@ -140,6 +140,50 @@ public static class DealsEndpoints
         .WithName("completeInterest")
         .WithTags("Deals");
 
+        app.MapPost("/interests/{id:guid}/dispute", async (
+            Guid id,
+            DisputeInterestRequest request,
+            ClaimsPrincipal principal,
+            IDealsService deals,
+            CancellationToken ct) =>
+        {
+            var userId = RequireUserId(principal);
+            return Results.Ok(await deals.DisputeAsync(userId, id, request, ct));
+        })
+        .RequireAuthorization()
+        .WithName("disputeInterest")
+        .WithTags("Deals");
+
+        app.MapPost("/interests/{id:guid}/rate", async (
+            Guid id,
+            RateInterestRequest request,
+            ClaimsPrincipal principal,
+            IDealsService deals,
+            CancellationToken ct) =>
+        {
+            var userId = RequireUserId(principal);
+            await deals.RateAsync(userId, id, request, ct);
+            return Results.NoContent();
+        })
+        .RequireAuthorization()
+        .WithName("rateInterest")
+        .WithTags("Deals");
+
+        app.MapPost("/listings/{listingId:guid}/reports", async (
+            Guid listingId,
+            ReportListingRequest request,
+            ClaimsPrincipal principal,
+            IDealsService deals,
+            CancellationToken ct) =>
+        {
+            var userId = RequireUserId(principal);
+            await deals.ReportListingAsync(userId, listingId, request, ct);
+            return Results.NoContent();
+        })
+        .RequireAuthorization()
+        .WithName("reportListing")
+        .WithTags("Deals");
+
         return app;
     }
 

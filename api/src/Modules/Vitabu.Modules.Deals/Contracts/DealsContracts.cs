@@ -26,6 +26,9 @@ public sealed record InterestDetail(
     DateTime CreatedAtUtc,
     DateTime? AcceptedAtUtc,
     DateTime? ReservedUntilUtc,
+    DateTime? BuyerCompletedAtUtc,
+    DateTime? SellerCompletedAtUtc,
+    string? DisputeReason,
     PartySnippet Buyer,
     PartySnippet Seller);
 
@@ -42,6 +45,29 @@ public sealed record InterestCard(
 
 public sealed record InterestPage(
     IReadOnlyList<InterestCard> Items,
+    int Page,
+    int PageSize,
+    int TotalItems,
+    int TotalPages);
+
+public sealed record DisputeInterestRequest(string Reason);
+
+public sealed record RateInterestRequest(int Stars, string? Comment);
+
+public sealed record ReportListingRequest(string Reason, string? Details);
+
+public sealed record ListingReportItem(
+    Guid Id,
+    Guid ListingId,
+    string ListingTitle,
+    Guid ReporterUserId,
+    string Reason,
+    string? Details,
+    string Status,
+    DateTime CreatedAtUtc);
+
+public sealed record ListingReportPage(
+    IReadOnlyList<ListingReportItem> Items,
     int Page,
     int PageSize,
     int TotalItems,

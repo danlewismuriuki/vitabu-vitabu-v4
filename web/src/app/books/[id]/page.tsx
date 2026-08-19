@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
+import { ReportListingButton } from "@/components/ReportListingButton";
 
 type ListingDetail = {
   id: string;
@@ -119,6 +120,7 @@ export default async function BookDetailPage({
             Keep browsing
           </Link>
         </div>
+        <ReportListingButton listingId={listing.id} />
       </article>
     </main>
   );

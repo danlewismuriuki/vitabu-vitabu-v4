@@ -15,6 +15,7 @@ export type UserProfile = {
   phone_verified: boolean;
   phone_verified_at_utc?: string | null;
   email_verified: boolean;
+  is_staff: boolean;
   created_at_utc: string;
 };
 

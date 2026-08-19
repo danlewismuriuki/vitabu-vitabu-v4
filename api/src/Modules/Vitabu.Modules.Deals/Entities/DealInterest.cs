@@ -16,4 +16,8 @@ public sealed class DealInterest
     public DateTime UpdatedAtUtc { get; set; }
     public DateTime? AcceptedAtUtc { get; set; }
     public DateTime? ReservedUntilUtc { get; set; }
+    public DateTime? BuyerCompletedAtUtc { get; set; }
+    public DateTime? SellerCompletedAtUtc { get; set; }
+    public string? DisputeReason { get; set; }
+    public DateTime? DisputedAtUtc { get; set; }
 }

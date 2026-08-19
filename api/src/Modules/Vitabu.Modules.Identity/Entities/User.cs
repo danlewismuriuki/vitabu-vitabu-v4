@@ -13,6 +13,7 @@ public sealed class User
     public DateTime? EmailVerifiedAtUtc { get; set; }
     public DateTime AcceptedTermsAtUtc { get; set; }
     public bool ConfirmedParentGuardian { get; set; }
+    public bool IsStaff { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
 }
