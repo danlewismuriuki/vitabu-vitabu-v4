@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.6.0
+  version: 0.7.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
@@ -22,6 +22,8 @@ tags:
     description: Interest / arrange / reserve between buyer and seller
   - name: Notifications
     description: In-app notifications (email fan-out on key deal events)
+  - name: Wishlist
+    description: Save listings for later
   - name: Admin
     description: Staff moderation (hide listings, resolve reports)
 paths:
@@ -1085,6 +1087,101 @@ paths:
         "401":
           $ref: "#/components/responses/Problem"
 
+  /me/wishlist:
+    get:
+      tags: [Wishlist]
+      operationId: listMyWishlist
+      summary: Listings saved by the current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Wishlist page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishlistPage"
+        "401":
+          $ref: "#/components/responses/Problem"
+
+  /listings/{id}/wishlist:
+    get:
+      tags: [Wishlist]
+      operationId: getWishlistStatus
+      summary: Whether the current user has saved this listing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Wishlist status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishlistStatus"
+        "401":
+          $ref: "#/components/responses/Problem"
+    post:
+      tags: [Wishlist]
+      operationId: addToWishlist
+      summary: Save listing to wishlist (idempotent)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Saved
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+    delete:
+      tags: [Wishlist]
+      operationId: removeFromWishlist
+      summary: Remove listing from wishlist (idempotent)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Removed
+        "401":
+          $ref: "#/components/responses/Problem"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1687,4 +1784,38 @@ components:
         total_pages:
           type: integer
         unread_count:
+          type: integer
+    WishlistStatus:
+      type: object
+      required: [on_wishlist]
+      properties:
+        on_wishlist:
+          type: boolean
+    WishlistItem:
+      type: object
+      required: [listing_id, saved_at_utc, listing]
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+        saved_at_utc:
+          type: string
+          format: date-time
+        listing:
+          $ref: "#/components/schemas/ListingCard"
+    WishlistPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/WishlistItem"
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
           type: integer

@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredUser, clearSession } from "@/lib/auth-storage";
 
-export function SiteHeader({ active }: { active?: "browse" | "sell" | "mine" }) {
+export function SiteHeader({
+  active,
+}: {
+  active?: "browse" | "sell" | "mine" | "wishlist";
+}) {
   const [user, setUser] = useState<{ display_name: string; phone_verified: boolean } | null>(
     null
   );
@@ -42,6 +46,7 @@ export function SiteHeader({ active }: { active?: "browse" | "sell" | "mine" }) 
           {link("/books", "browse", "Browse")}
           {link("/sell", "sell", "Sell")}
           {user ? link("/my-listings", "mine", "My listings") : null}
+          {user ? link("/wishlist", "wishlist", "Wishlist") : null}
           {user ? (
             <Link href="/my-interests" className="text-primary-700 hover:text-accent-600">
               Interests
