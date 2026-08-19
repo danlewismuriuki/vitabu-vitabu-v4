@@ -15,7 +15,7 @@ type ListingDetail = {
   subject: string;
   term?: string | null;
   city: string;
-  intent: "sale" | "free" | "exchange";
+  intent: "sale" | "free" | "exchange" | "donate_school";
   condition: string;
   price_kes?: number | null;
   description: string;
@@ -41,7 +41,7 @@ export default function EditListingPage() {
   const [subject, setSubject] = useState("");
   const [term, setTerm] = useState("");
   const [city, setCity] = useState("");
-  const [intent, setIntent] = useState<"sale" | "free" | "exchange">("sale");
+  const [intent, setIntent] = useState<"sale" | "free" | "exchange" | "donate_school">("sale");
   const [condition, setCondition] = useState("good");
   const [priceKes, setPriceKes] = useState("");
   const [description, setDescription] = useState("");
@@ -190,12 +190,13 @@ export default function EditListingPage() {
                   className={fieldClass}
                   value={intent}
                   onChange={(e) =>
-                    setIntent(e.target.value as "sale" | "free" | "exchange")
+                    setIntent(e.target.value as "sale" | "free" | "exchange" | "donate_school")
                   }
                 >
                   <option value="sale">Sale</option>
                   <option value="free">Free</option>
                   <option value="exchange">Exchange</option>
+                  <option value="donate_school">Donate school</option>
                 </select>
               </div>
               {intent === "sale" ? (

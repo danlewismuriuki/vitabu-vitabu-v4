@@ -38,7 +38,7 @@ export default function SellPage() {
   const [subject, setSubject] = useState("");
   const [term, setTerm] = useState("");
   const [city, setCity] = useState("");
-  const [intent, setIntent] = useState<"sale" | "free" | "exchange">("sale");
+  const [intent, setIntent] = useState<"sale" | "free" | "exchange" | "donate_school">("sale");
   const [condition, setCondition] = useState("good");
   const [priceKes, setPriceKes] = useState("350");
   const [description, setDescription] = useState("");
@@ -79,6 +79,8 @@ export default function SellPage() {
   const intentHint = useMemo(() => {
     if (intent === "sale") return "Set a fair KES price parents will notice.";
     if (intent === "free") return "Giveaway — no price. First interested parent wins.";
+    if (intent === "donate_school")
+      return "Donate to a school — no price. Note the school or drive in the description.";
     return "Exchange — describe what you’d like in return in the notes.";
   }, [intent]);
 
@@ -271,6 +273,7 @@ export default function SellPage() {
                     ["sale", "Sale"],
                     ["free", "Free"],
                     ["exchange", "Exchange"],
+                    ["donate_school", "Donate school"],
                   ] as const
                 ).map(([value, label]) => (
                   <button
@@ -336,7 +339,7 @@ export default function SellPage() {
                 className={fieldClass}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Condition notes, missing pages, exchange wishlist…"
+                placeholder="Condition notes, school name for donate, exchange wishlist…"
               />
             </div>
 

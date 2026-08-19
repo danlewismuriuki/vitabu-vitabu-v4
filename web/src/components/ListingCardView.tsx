@@ -9,7 +9,7 @@ export type ListingCard = {
   subject: string;
   term?: string | null;
   city: string;
-  intent: "sale" | "free" | "exchange";
+  intent: "sale" | "free" | "exchange" | "donate_school" | string;
   condition: string;
   status: string;
   price_kes?: number | null;
@@ -18,21 +18,24 @@ export type ListingCard = {
   created_at_utc: string;
 };
 
-const intentLabel: Record<ListingCard["intent"], string> = {
+const intentLabel: Record<string, string> = {
   sale: "For sale",
   free: "Free",
   exchange: "Exchange",
+  donate_school: "Donate",
 };
 
-const intentClass: Record<ListingCard["intent"], string> = {
+const intentClass: Record<string, string> = {
   sale: "bg-accent-100 text-accent-700",
   free: "bg-secondary-100 text-secondary-700",
   exchange: "bg-gold-100 text-gold-700",
+  donate_school: "bg-primary-100 text-primary-700",
 };
 
 function priceLabel(listing: ListingCard) {
   if (listing.intent === "free") return "Free";
   if (listing.intent === "exchange") return "Exchange";
+  if (listing.intent === "donate_school") return "Donate to school";
   if (listing.price_kes != null) return `KES ${listing.price_kes.toLocaleString()}`;
   return "Price on request";
 }
@@ -48,9 +51,11 @@ export function ListingCardView({ listing }: { listing: ListingCard }) {
           {listing.title}
         </h2>
         <span
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${intentClass[listing.intent]}`}
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+            intentClass[listing.intent] ?? "bg-neutral-100 text-neutral-700"
+          }`}
         >
-          {intentLabel[listing.intent]}
+          {intentLabel[listing.intent] ?? listing.intent}
         </span>
       </div>
       <p className="mt-2 text-sm text-neutral-600">
@@ -58,10 +63,8 @@ export function ListingCardView({ listing }: { listing: ListingCard }) {
         {listing.term ? ` · ${listing.term}` : ""}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-        <span className="rounded-md bg-accent-50 px-2 py-1 text-accent-700">
-          {listing.city}
-        </span>
         <span className="font-medium text-primary-700">{priceLabel(listing)}</span>
+        <span className="text-neutral-500">{listing.city}</span>
         {listing.interest_count > 0 ? (
           <span className="text-neutral-500">{listing.interest_count} interested</span>
         ) : null}

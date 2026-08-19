@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Vitabu Vitabu API
-  version: 0.7.0
+  version: 0.8.0
   description: |
     Contract-first API for Vitabu Vitabu (Kenya CBC parent marketplace).
     Wire format: snake_case JSON, enums as snake_case strings, datetimes ISO-8601 UTC (*_utc).
@@ -1387,13 +1387,13 @@ components:
           description: Present only in Development for mock SMS
     ListingIntent:
       type: string
-      enum: [sale, free, exchange]
+      enum: [sale, free, exchange, donate_school]
     BookCondition:
       type: string
       enum: [like_new, good, fair, writing_inside]
     ListingStatus:
       type: string
-      enum: [draft, active, reserved, sold, given, exchanged, paused, hidden]
+      enum: [draft, active, reserved, sold, given, exchanged, donated, paused, hidden]
     CatalogFacets:
       type: object
       required: [grades, subjects, cities, intents, conditions]

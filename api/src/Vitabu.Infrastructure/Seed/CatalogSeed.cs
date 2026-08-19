@@ -93,7 +93,13 @@ public static class CatalogSeed
 
         var titles = await db.CbcTitles.AsNoTracking().ToListAsync(ct);
         var cities = doc.Cities is { Count: > 0 } ? doc.Cities : ["Nairobi", "Mombasa", "Kisumu"];
-        var intents = new[] { ListingIntent.Sale, ListingIntent.Free, ListingIntent.Exchange };
+        var intents = new[]
+        {
+            ListingIntent.Sale,
+            ListingIntent.Free,
+            ListingIntent.Exchange,
+            ListingIntent.DonateSchool
+        };
         var conditions = new[] { BookCondition.LikeNew, BookCondition.Good, BookCondition.Fair, BookCondition.WritingInside };
         var nowUtc = DateTime.UtcNow;
 

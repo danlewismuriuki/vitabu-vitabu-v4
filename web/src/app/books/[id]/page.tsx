@@ -12,7 +12,7 @@ type ListingDetail = {
   subject: string;
   term?: string | null;
   city: string;
-  intent: "sale" | "free" | "exchange";
+  intent: "sale" | "free" | "exchange" | "donate_school";
   condition: string;
   price_kes?: number | null;
   interest_count: number;
@@ -65,9 +65,11 @@ export default async function BookDetailPage({
       ? "Free"
       : listing.intent === "exchange"
         ? "Exchange"
-        : listing.price_kes != null
-          ? `KES ${listing.price_kes.toLocaleString()}`
-          : "Price on request";
+        : listing.intent === "donate_school"
+          ? "Donate to school"
+          : listing.price_kes != null
+            ? `KES ${listing.price_kes.toLocaleString()}`
+            : "Price on request";
 
   return (
     <main className="min-h-screen bg-neutral-50">
